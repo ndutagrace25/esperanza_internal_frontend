@@ -21,7 +21,10 @@ export type Employee = {
   updatedAt: string;
 };
 
-export type EmployeeWithoutPassword = Omit<Employee, "password" | "tempPassword">;
+export type EmployeeWithoutPassword = Omit<
+  Employee,
+  "password" | "tempPassword"
+>;
 
 // Auth types
 export type LoginCredentials = {
@@ -60,10 +63,44 @@ export type PaginatedResponse<T> = {
   };
 };
 
+// Client types
+export type Client = {
+  id: string;
+  companyName: string;
+  contactPerson: string | null;
+  email: string | null;
+  phone: string | null;
+  alternatePhone: string | null;
+  address: string | null;
+  city: string | null;
+  state: string | null;
+  country: string | null;
+  postalCode: string | null;
+  website: string | null;
+  taxId: string | null;
+  status: string;
+  notes: string | null;
+  broughtInById: string | null;
+  broughtInBy: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+  } | null;
+  assignedToId: string | null;
+  assignedTo: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+  } | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
 // API Error types
 export type ApiError = {
   error: string;
   requiresPasswordReset?: boolean;
   requiresNewTempPassword?: boolean;
 };
-

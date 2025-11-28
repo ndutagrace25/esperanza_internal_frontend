@@ -64,7 +64,7 @@ export async function updateEmployee(
   id: string,
   data: UpdateEmployeeData
 ): Promise<Employee> {
-  const response = await api.put<Employee>(`/employees/${id}`, data);
+  const response = await api.patch<Employee>(`/employees/${id}`, data);
   return response.data;
 }
 
