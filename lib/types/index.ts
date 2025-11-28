@@ -129,6 +129,83 @@ export type Product = {
   updatedAt: string;
 };
 
+// Job Card types
+export type JobTask = {
+  id: string;
+  jobCardId: string;
+  moduleName: string | null;
+  taskType: string | null;
+  description: string;
+  startTime: string | null;
+  endTime: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type JobExpense = {
+  id: string;
+  jobCardId: string;
+  category: string;
+  description: string | null;
+  amount: string; // Decimal as string
+  hasReceipt: boolean;
+  receiptUrl: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type JobCardApproval = {
+  id: string;
+  jobCardId: string;
+  role: string;
+  approverName: string | null;
+  approverTitle: string | null;
+  comment: string | null;
+  signedAt: string | null;
+  signatureType: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type JobCard = {
+  id: string;
+  jobNumber: string;
+  visitDate: string;
+  clientId: string;
+  client: {
+    id: string;
+    companyName: string;
+    contactPerson: string | null;
+    email: string | null;
+    phone: string | null;
+  };
+  location: string | null;
+  contactPerson: string | null;
+  purpose: string | null;
+  estimatedDuration: number | null;
+  estimatedCost: string | null; // Decimal as string
+  startTime: string | null;
+  endTime: string | null;
+  workSummary: string | null;
+  findings: string | null;
+  recommendations: string | null;
+  status: string;
+  completedAt: string | null;
+  cancelledAt: string | null;
+  supportStaffId: string | null;
+  supportStaff: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+  } | null;
+  tasks: JobTask[];
+  expenses: JobExpense[];
+  approvals: JobCardApproval[];
+  createdAt: string;
+  updatedAt: string;
+};
+
 // API Error types
 export type ApiError = {
   error: string;

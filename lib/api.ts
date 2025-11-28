@@ -2,8 +2,6 @@ import axios, {
   type AxiosInstance,
   type InternalAxiosRequestConfig,
 } from "axios";
-import { store } from "./store";
-import { logout } from "./slices/authSlice";
 
 // Create axios instance with default configuration
 const api: AxiosInstance = axios.create({
@@ -47,8 +45,14 @@ api.interceptors.response.use(
           // Unauthorized - automatically log out user for any 401 error
           // This handles: expired tokens, invalid tokens, missing auth, employee not found, etc.
           if (typeof window !== "undefined") {
-            // Dispatch logout to clear Redux state
-            store.dispatch(logout());
+            // Lazy import to avoid circular dependency
+            Promise.all([
+              import("./store"),
+              import("./slices/authSlice"),
+            ]).then(([{ store }, { logout }]) => {
+              // Dispatch logout to clear Redux state
+              store.dispatch(logout());
+            });
             // Clear localStorage
             localStorage.removeItem("token");
             localStorage.removeItem("employee");

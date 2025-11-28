@@ -4,6 +4,7 @@ import employeeReducer from "./slices/employeeSlice";
 import clientReducer from "./slices/clientSlice";
 import productCategoryReducer from "./slices/productCategorySlice";
 import productReducer from "./slices/productSlice";
+import jobCardReducer from "./slices/jobCardSlice";
 
 export const store = configureStore({
   reducer: {
@@ -12,6 +13,7 @@ export const store = configureStore({
     client: clientReducer,
     productCategory: productCategoryReducer,
     product: productReducer,
+    jobCard: jobCardReducer,
   },
 });
 
