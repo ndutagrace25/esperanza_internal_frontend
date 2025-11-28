@@ -1,26 +1,25 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter, usePathname } from "next/navigation";
-import Link from "next/link";
-import Image from "next/image";
-import { useAppDispatch, useAppSelector } from "@/lib/hooks";
-import { logout, setCredentials } from "@/lib/slices/authSlice";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { useAppDispatch, useAppSelector } from "@/lib/hooks";
+import { logout } from "@/lib/slices/authSlice";
+import { cn } from "@/lib/utils";
 import {
-  Users,
-  Briefcase,
-  Package,
-  FileText,
-  ShoppingCart,
-  DollarSign,
   BarChart3,
+  Briefcase,
+  DollarSign,
+  FileText,
   LogOut,
   Menu,
-  X,
+  Package,
+  ShoppingCart,
+  Users,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import Image from "next/image";
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
+import { useState } from "react";
 
 const menuItems = [
   { name: "Employees", icon: Users, href: "/employees" },
@@ -32,6 +31,103 @@ const menuItems = [
   { name: "Business Analytics", icon: BarChart3, href: "/analytics" },
 ];
 
+interface SidebarContentProps {
+  pathname: string;
+  employee: {
+    firstName: string;
+    lastName: string;
+    email: string;
+  } | null;
+  onLogout: () => void;
+  onItemClick?: () => void;
+}
+
+const SidebarContent = ({
+  pathname,
+  employee,
+  onLogout,
+  onItemClick,
+}: SidebarContentProps) => (
+  <div
+    className="flex flex-col h-full bg-card"
+    style={{ backgroundColor: "hsl(var(--card))" }}
+  >
+    {/* Logo */}
+    <div
+      className="flex items-center gap-3 p-6 border-b bg-card"
+      style={{ backgroundColor: "hsl(var(--card))" }}
+    >
+      <div className="relative w-10 h-10">
+        <Image
+          src="/logo.jpeg"
+          alt="Esperanza Logo"
+          fill
+          className="object-contain rounded"
+        />
+      </div>
+      <div>
+        <h1 className="font-bold text-lg text-foreground">Esperanza</h1>
+        <p className="text-xs text-muted-foreground">Digital Solutions</p>
+      </div>
+    </div>
+
+    {/* User Info */}
+    {employee && (
+      <div
+        className="p-4 border-b bg-card"
+        style={{ backgroundColor: "hsl(var(--card))" }}
+      >
+        <p className="text-sm font-medium text-foreground">
+          {employee.firstName} {employee.lastName}
+        </p>
+        <p className="text-xs text-muted-foreground">{employee.email}</p>
+      </div>
+    )}
+
+    {/* Menu Items */}
+    <nav
+      className="flex-1 p-4 space-y-1 overflow-y-auto bg-card"
+      style={{ backgroundColor: "hsl(var(--card))" }}
+    >
+      {menuItems.map((item) => {
+        const Icon = item.icon;
+        const isActive = pathname === item.href;
+        return (
+          <Link
+            key={item.href}
+            href={item.href}
+            onClick={onItemClick}
+            className={cn(
+              "flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors bg-card",
+              isActive
+                ? "bg-primary text-primary-foreground"
+                : "text-foreground hover:bg-accent hover:text-accent-foreground"
+            )}
+          >
+            <Icon className="h-5 w-5" />
+            {item.name}
+          </Link>
+        );
+      })}
+    </nav>
+
+    {/* Logout Button */}
+    <div
+      className="p-4 border-t bg-card"
+      style={{ backgroundColor: "hsl(var(--card))" }}
+    >
+      <Button
+        variant="ghost"
+        className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950"
+        onClick={onLogout}
+      >
+        <LogOut className="h-5 w-5 mr-3" />
+        Logout
+      </Button>
+    </div>
+  </div>
+);
+
 interface DashboardLayoutProps {
   children: React.ReactNode;
 }
@@ -40,7 +136,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const router = useRouter();
   const pathname = usePathname();
   const dispatch = useAppDispatch();
-  const { employee, isAuthenticated } = useAppSelector((state) => state.auth);
+  const { employee } = useAppSelector((state) => state.auth);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const handleLogout = () => {
@@ -48,92 +144,15 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     router.push("/login");
   };
 
-  const SidebarContent = ({ onItemClick }: { onItemClick?: () => void }) => (
-    <div 
-      className="flex flex-col h-full bg-card"
-      style={{ backgroundColor: "hsl(var(--card))" }}
-    >
-      {/* Logo */}
-      <div 
-        className="flex items-center gap-3 p-6 border-b bg-card"
-        style={{ backgroundColor: "hsl(var(--card))" }}
-      >
-        <div className="relative w-10 h-10">
-          <Image
-            src="/logo.jpeg"
-            alt="Esperanza Logo"
-            fill
-            className="object-contain rounded"
-          />
-        </div>
-        <div>
-          <h1 className="font-bold text-lg text-foreground">Esperanza</h1>
-          <p className="text-xs text-muted-foreground">Digital Solutions</p>
-        </div>
-      </div>
-
-      {/* User Info */}
-      {employee && (
-        <div 
-          className="p-4 border-b bg-card"
-          style={{ backgroundColor: "hsl(var(--card))" }}
-        >
-          <p className="text-sm font-medium text-foreground">
-            {employee.firstName} {employee.lastName}
-          </p>
-          <p className="text-xs text-muted-foreground">{employee.email}</p>
-        </div>
-      )}
-
-      {/* Menu Items */}
-      <nav 
-        className="flex-1 p-4 space-y-1 overflow-y-auto bg-card"
-        style={{ backgroundColor: "hsl(var(--card))" }}
-      >
-        {menuItems.map((item) => {
-          const Icon = item.icon;
-          const isActive = pathname === item.href;
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              onClick={onItemClick}
-              className={cn(
-                "flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors bg-card",
-                isActive
-                  ? "bg-primary text-primary-foreground"
-                  : "text-foreground hover:bg-accent hover:text-accent-foreground"
-              )}
-            >
-              <Icon className="h-5 w-5" />
-              {item.name}
-            </Link>
-          );
-        })}
-      </nav>
-
-      {/* Logout Button */}
-      <div 
-        className="p-4 border-t bg-card"
-        style={{ backgroundColor: "hsl(var(--card))" }}
-      >
-        <Button
-          variant="ghost"
-          className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950"
-          onClick={handleLogout}
-        >
-          <LogOut className="h-5 w-5 mr-3" />
-          Logout
-        </Button>
-      </div>
-    </div>
-  );
-
   return (
     <div className="flex h-screen bg-background">
       {/* Desktop Sidebar */}
       <aside className="hidden md:flex md:w-64 md:flex-col md:fixed md:inset-y-0 md:border-r bg-card">
-        <SidebarContent />
+        <SidebarContent
+          pathname={pathname}
+          employee={employee}
+          onLogout={handleLogout}
+        />
       </aside>
 
       {/* Mobile Header */}
@@ -159,7 +178,12 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
               </Button>
             </SheetTrigger>
             <SheetContent side="left" className="w-64 p-0 bg-card border-0">
-              <SidebarContent onItemClick={() => setMobileMenuOpen(false)} />
+              <SidebarContent
+                pathname={pathname}
+                employee={employee}
+                onLogout={handleLogout}
+                onItemClick={() => setMobileMenuOpen(false)}
+              />
             </SheetContent>
           </Sheet>
         </div>
@@ -172,4 +196,3 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     </div>
   );
 }
-

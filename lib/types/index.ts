@@ -98,6 +98,37 @@ export type Client = {
   updatedAt: string;
 };
 
+// Product Category types
+export type ProductCategory = {
+  id: string;
+  name: string;
+  description: string | null;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+// Product types
+export type Product = {
+  id: string;
+  name: string;
+  description: string | null;
+  sku: string | null;
+  barcode: string | null;
+  categoryId: string | null;
+  category: ProductCategory | null;
+  stockQuantity: number | null;
+  minStockLevel: number | null;
+  unit: string | null;
+  status: string;
+  imageUrl: string | null;
+  supplier: string | null;
+  supplierContact: string | null;
+  notes: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
 // API Error types
 export type ApiError = {
   error: string;

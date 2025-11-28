@@ -2,6 +2,8 @@ import axios, {
   type AxiosInstance,
   type InternalAxiosRequestConfig,
 } from "axios";
+import { store } from "./store";
+import { logout } from "./slices/authSlice";
 
 // Create axios instance with default configuration
 const api: AxiosInstance = axios.create({
@@ -42,11 +44,16 @@ api.interceptors.response.use(
 
       switch (status) {
         case 401:
-          // Unauthorized - clear token and redirect to login
+          // Unauthorized - automatically log out user for any 401 error
+          // This handles: expired tokens, invalid tokens, missing auth, employee not found, etc.
           if (typeof window !== "undefined") {
+            // Dispatch logout to clear Redux state
+            store.dispatch(logout());
+            // Clear localStorage
             localStorage.removeItem("token");
-            // Optionally redirect to login page
-            // window.location.href = "/login";
+            localStorage.removeItem("employee");
+            // Redirect to login page
+            window.location.href = "/login";
           }
           break;
         case 403:
