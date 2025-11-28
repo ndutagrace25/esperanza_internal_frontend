@@ -87,10 +87,10 @@ export function EditJobCardDialog({
       });
   type ExpenseItem =
     | JobExpense
-    | (Omit<
-        JobExpense,
-        "id" | "jobCardId" | "createdAt" | "updatedAt"
-      > & { tempId: string; isNew: true });
+    | (Omit<JobExpense, "id" | "jobCardId" | "createdAt" | "updatedAt"> & {
+        tempId: string;
+        isNew: true;
+      });
 
   const [tasks, setTasks] = useState<TaskItem[]>([]);
   const [expenses, setExpenses] = useState<ExpenseItem[]>([]);
@@ -174,7 +174,8 @@ export function EditJobCardDialog({
         purpose:
           data.purpose && data.purpose.trim() !== "" ? data.purpose : null,
         estimatedDuration:
-          data.estimatedDuration !== undefined && data.estimatedDuration !== null
+          data.estimatedDuration !== undefined &&
+          data.estimatedDuration !== null
             ? data.estimatedDuration
             : null,
         estimatedCost:
@@ -223,9 +224,10 @@ export function EditJobCardDialog({
       for (const task of tasks) {
         if ("isNew" in task && task.isNew) {
           // New task - create it
-          const { tempId, isNew, ...taskData } = task;
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          const { tempId: _tempId, isNew: _isNew, ...taskData } = task;
           await createTask(jobCard.id, taskData);
-        } else {
+        } else if ("id" in task) {
           // Existing task - update it
           const updateData: UpdateJobTaskData = {
             moduleName: task.moduleName,
@@ -242,9 +244,10 @@ export function EditJobCardDialog({
       for (const expense of expenses) {
         if ("isNew" in expense && expense.isNew) {
           // New expense - create it
-          const { tempId, isNew, ...expenseData } = expense;
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          const { tempId: _tempId, isNew: _isNew, ...expenseData } = expense;
           await createExpense(jobCard.id, expenseData);
-        } else {
+        } else if ("id" in expense) {
           // Existing expense - update it
           const updateData: UpdateJobExpenseData = {
             category: expense.category,
@@ -288,7 +291,12 @@ export function EditJobCardDialog({
   ) => {
     setTasks(
       tasks.map((task) => {
-        const id = "isNew" in task && task.isNew ? task.tempId : task.id;
+        const id =
+          "isNew" in task && task.isNew
+            ? task.tempId
+            : "id" in task
+            ? task.id
+            : "";
         if (id === taskIdOrTempId) {
           return { ...task, [field]: value };
         }
@@ -300,16 +308,19 @@ export function EditJobCardDialog({
   const removeTask = (taskIdOrTempId: string) => {
     const task = tasks.find(
       (t) =>
-        ("isNew" in t && t.isNew ? t.tempId : t.id) === taskIdOrTempId
+        ("isNew" in t && t.isNew ? t.tempId : "id" in t ? t.id : "") ===
+        taskIdOrTempId
     );
-    if (task && !("isNew" in task && task.isNew)) {
+    if (task && "id" in task) {
       // Existing task - mark for deletion
       setDeletedTaskIds([...deletedTaskIds, task.id]);
     }
-    setTasks(tasks.filter((t) => {
-      const id = "isNew" in t && t.isNew ? t.tempId : t.id;
-      return id !== taskIdOrTempId;
-    }));
+    setTasks(
+      tasks.filter((t) => {
+        const id = "isNew" in t && t.isNew ? t.tempId : "id" in t ? t.id : "";
+        return id !== taskIdOrTempId;
+      })
+    );
   };
 
   // Expense management functions
@@ -341,7 +352,9 @@ export function EditJobCardDialog({
         const id =
           "isNew" in expense && expense.isNew
             ? expense.tempId
-            : expense.id;
+            : "id" in expense
+            ? expense.id
+            : "";
         if (id === expenseIdOrTempId) {
           return { ...expense, [field]: value };
         }
@@ -353,15 +366,16 @@ export function EditJobCardDialog({
   const removeExpense = (expenseIdOrTempId: string) => {
     const expense = expenses.find(
       (e) =>
-        ("isNew" in e && e.isNew ? e.tempId : e.id) === expenseIdOrTempId
+        ("isNew" in e && e.isNew ? e.tempId : "id" in e ? e.id : "") ===
+        expenseIdOrTempId
     );
-    if (expense && !("isNew" in expense && expense.isNew)) {
+    if (expense && "id" in expense) {
       // Existing expense - mark for deletion
       setDeletedExpenseIds([...deletedExpenseIds, expense.id]);
     }
     setExpenses(
       expenses.filter((e) => {
-        const id = "isNew" in e && e.isNew ? e.tempId : e.id;
+        const id = "isNew" in e && e.isNew ? e.tempId : "id" in e ? e.id : "";
         return id !== expenseIdOrTempId;
       })
     );
@@ -647,7 +661,9 @@ export function EditJobCardDialog({
                         value={field.value ?? ""}
                         onChange={(e) => {
                           const value = e.target.value;
-                          field.onChange(value === "" ? null : parseInt(value, 10));
+                          field.onChange(
+                            value === "" ? null : parseInt(value, 10)
+                          );
                         }}
                       />
                     </FormControl>
@@ -769,13 +785,17 @@ export function EditJobCardDialog({
 
               {tasks.length === 0 ? (
                 <div className="text-center py-8 text-sm text-muted-foreground border border-dashed rounded-lg">
-                  No tasks added yet. Click "Add Task" to get started.
+                  No tasks added yet. Click &quot;Add Task&quot; to get started.
                 </div>
               ) : (
                 <div className="space-y-4">
                   {tasks.map((task, index) => {
                     const taskId =
-                      "isNew" in task && task.isNew ? task.tempId : task.id;
+                      "isNew" in task && task.isNew
+                        ? task.tempId
+                        : "id" in task
+                        ? task.id
+                        : "";
                     return (
                       <div
                         key={taskId}
@@ -948,7 +968,8 @@ export function EditJobCardDialog({
 
               {expenses.length === 0 ? (
                 <div className="text-center py-8 text-sm text-muted-foreground border border-dashed rounded-lg">
-                  No expenses added yet. Click "Add Expense" to get started.
+                  No expenses added yet. Click &quot;Add Expense&quot; to get
+                  started.
                 </div>
               ) : (
                 <div className="space-y-4">
@@ -956,7 +977,9 @@ export function EditJobCardDialog({
                     const expenseId =
                       "isNew" in expense && expense.isNew
                         ? expense.tempId
-                        : expense.id;
+                        : "id" in expense
+                        ? expense.id
+                        : "";
                     return (
                       <div
                         key={expenseId}
@@ -1093,4 +1116,3 @@ export function EditJobCardDialog({
     </Dialog>
   );
 }
-
