@@ -494,7 +494,7 @@ export function CreateClientDialog({
                         <SelectValue placeholder="Select employee (optional)" />
                       </SelectTrigger>
                     </FormControl>
-                    <SelectContent>
+                    <SelectContent className="bg-white">
                       {employees.map((employee) => (
                         <SelectItem key={employee.id} value={employee.id}>
                           {employee.firstName} {employee.lastName}
