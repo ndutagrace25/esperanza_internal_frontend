@@ -106,7 +106,7 @@ export function ClientsTable({
                 <TableHead className="hidden md:table-cell">Contact</TableHead>
                 <TableHead className="hidden lg:table-cell">Email</TableHead>
                 <TableHead className="hidden md:table-cell">Phone</TableHead>
-                <TableHead className="hidden lg:table-cell">Location</TableHead>
+                <TableHead className="hidden lg:table-cell">Brought In By</TableHead>
                 <TableHead className="hidden md:table-cell">Status</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
@@ -134,9 +134,7 @@ export function ClientsTable({
                     {client.phone || "-"}
                   </TableCell>
                   <TableCell className="hidden lg:table-cell">
-                    {client.city && client.country
-                      ? `${client.city}, ${client.country}`
-                      : client.city || client.country || "-"}
+                    {client.broughtInBy ? client.broughtInBy.firstName + " " + client.broughtInBy.lastName : "-"}
                   </TableCell>
                   <TableCell className="hidden md:table-cell">
                     <Badge variant={getStatusBadgeVariant(client.status)}>
