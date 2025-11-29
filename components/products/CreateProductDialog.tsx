@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { useAppDispatch } from "@/lib/hooks";
+import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import { createProduct } from "@/lib/slices/productSlice";
 import {
   Dialog,
@@ -52,6 +52,7 @@ export function CreateProductDialog({
     isLoading: categoriesLoading,
     error: categoriesError,
   } = useProductCategories();
+  const { error: productError } = useAppSelector((state) => state.product);
   const [isLoading, setIsLoading] = useState(false);
 
   const form = useForm<CreateProductData>({
@@ -105,10 +106,10 @@ export function CreateProductDialog({
             Fill in the details to add a new product to the system.
           </DialogDescription>
         </DialogHeader>
-        {categoriesError && (
+        {(categoriesError || productError) && (
           <Alert variant="destructive" className="mx-6">
             <AlertDescription className="font-medium text-red-500">
-              {categoriesError}
+              {categoriesError || productError}
             </AlertDescription>
           </Alert>
         )}

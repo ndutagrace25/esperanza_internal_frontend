@@ -30,7 +30,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader2, Plus, Trash2, X } from "lucide-react";
+import { Loader2, Plus, Trash2 } from "lucide-react";
 import { useClients } from "@/lib/hooks/useClients";
 import { useEmployees } from "@/lib/hooks/useEmployees";
 import type { CreateJobCardData } from "@/lib/services/jobCardService";
@@ -116,19 +116,22 @@ export function CreateJobCardDialog({
         purpose:
           data.purpose && data.purpose.trim() !== "" ? data.purpose : null,
         estimatedDuration:
-          data.estimatedDuration !== undefined && data.estimatedDuration !== null
+          data.estimatedDuration !== undefined &&
+          data.estimatedDuration !== null
             ? data.estimatedDuration
             : null,
         estimatedCost:
           data.estimatedCost && data.estimatedCost.trim() !== ""
             ? data.estimatedCost
             : null,
-        startTime: data.startTime && data.visitDate
-          ? new Date(`${data.visitDate}T${data.startTime}`).toISOString()
-          : null,
-        endTime: data.endTime && data.visitDate
-          ? new Date(`${data.visitDate}T${data.endTime}`).toISOString()
-          : null,
+        startTime:
+          data.startTime && data.visitDate
+            ? new Date(`${data.visitDate}T${data.startTime}`).toISOString()
+            : null,
+        endTime:
+          data.endTime && data.visitDate
+            ? new Date(`${data.visitDate}T${data.endTime}`).toISOString()
+            : null,
         workSummary:
           data.workSummary && data.workSummary.trim() !== ""
             ? data.workSummary
@@ -139,23 +142,22 @@ export function CreateJobCardDialog({
           data.recommendations && data.recommendations.trim() !== ""
             ? data.recommendations
             : null,
-        supportStaffId:
-          data.supportStaffId && data.supportStaffId !== ""
-            ? data.supportStaffId
-            : null,
+        supportStaffId: data.supportStaffId,
       };
       // Create job card first
       const jobCard = await dispatch(createJobCard(cleanedData)).unwrap();
 
       // Create all tasks
       for (const task of tasks) {
-        const { tempId, ...taskData } = task;
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { tempId: _tempId, ...taskData } = task;
         await createTask(jobCard.id, taskData);
       }
 
       // Create all expenses
       for (const expense of expenses) {
-        const { tempId, ...expenseData } = expense;
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { tempId: _tempId, ...expenseData } = expense;
         await createExpense(jobCard.id, expenseData);
       }
 
@@ -453,19 +455,18 @@ export function CreateJobCardDialog({
               <FormField
                 control={form.control}
                 name="supportStaffId"
+                rules={{ required: "Support staff is required" }}
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Support Staff</FormLabel>
+                    <FormLabel>Support Staff *</FormLabel>
                     <Select
-                      onValueChange={(value) => {
-                        field.onChange(value || null);
-                      }}
+                      onValueChange={field.onChange}
                       value={field.value || undefined}
                       disabled={isLoading || employeesLoading}
                     >
                       <FormControl>
                         <SelectTrigger className="h-11">
-                          <SelectValue placeholder="Select staff (optional)" />
+                          <SelectValue placeholder="Select staff" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent className="bg-white">
@@ -500,7 +501,9 @@ export function CreateJobCardDialog({
                         value={field.value ?? ""}
                         onChange={(e) => {
                           const value = e.target.value;
-                          field.onChange(value === "" ? null : parseInt(value, 10));
+                          field.onChange(
+                            value === "" ? null : parseInt(value, 10)
+                          );
                         }}
                       />
                     </FormControl>
@@ -622,7 +625,7 @@ export function CreateJobCardDialog({
 
               {tasks.length === 0 ? (
                 <div className="text-center py-8 text-sm text-muted-foreground border border-dashed rounded-lg">
-                  No tasks added yet. Click "Add Task" to get started.
+                  No tasks added yet. Click &quot;Add Task&quot; to get started.
                 </div>
               ) : (
                 <div className="space-y-4">
@@ -797,7 +800,8 @@ export function CreateJobCardDialog({
 
               {expenses.length === 0 ? (
                 <div className="text-center py-8 text-sm text-muted-foreground border border-dashed rounded-lg">
-                  No expenses added yet. Click "Add Expense" to get started.
+                  No expenses added yet. Click &quot;Add Expense&quot; to get
+                  started.
                 </div>
               ) : (
                 <div className="space-y-4">
@@ -936,4 +940,3 @@ export function CreateJobCardDialog({
     </Dialog>
   );
 }
-

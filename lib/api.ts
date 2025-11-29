@@ -45,19 +45,24 @@ api.interceptors.response.use(
           // Unauthorized - automatically log out user for any 401 error
           // This handles: expired tokens, invalid tokens, missing auth, employee not found, etc.
           if (typeof window !== "undefined") {
+            const currentPath = window.location.pathname;
+            const isAuthPage =
+              currentPath === "/login" || currentPath === "/forgot-password";
+
             // Lazy import to avoid circular dependency
-            Promise.all([
-              import("./store"),
-              import("./slices/authSlice"),
-            ]).then(([{ store }, { logout }]) => {
-              // Dispatch logout to clear Redux state
-              store.dispatch(logout());
-            });
+            Promise.all([import("./store"), import("./slices/authSlice")]).then(
+              ([{ store }, { logout }]) => {
+                // Dispatch logout to clear Redux state
+                store.dispatch(logout());
+              }
+            );
             // Clear localStorage
             localStorage.removeItem("token");
             localStorage.removeItem("employee");
-            // Redirect to login page
-            window.location.href = "/login";
+            // Only redirect to login page if not already on auth pages
+            if (!isAuthPage) {
+              window.location.href = "/login";
+            }
           }
           break;
         case 403:

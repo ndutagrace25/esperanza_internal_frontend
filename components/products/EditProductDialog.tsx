@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import { useAppDispatch } from "@/lib/hooks";
+import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import { updateProduct } from "@/lib/slices/productSlice";
 import {
   Dialog,
@@ -55,6 +55,7 @@ export function EditProductDialog({
     isLoading: categoriesLoading,
     error: categoriesError,
   } = useProductCategories();
+  const { error: productError } = useAppSelector((state) => state.product);
   const [isLoading, setIsLoading] = useState(false);
 
   const form = useForm<UpdateProductData>({
@@ -124,10 +125,10 @@ export function EditProductDialog({
             Update the product details below.
           </DialogDescription>
         </DialogHeader>
-        {categoriesError && (
+        {(categoriesError || productError) && (
           <Alert variant="destructive" className="mx-6">
             <AlertDescription className="font-medium text-red-500">
-              {categoriesError}
+              {categoriesError || productError}
             </AlertDescription>
           </Alert>
         )}

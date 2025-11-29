@@ -21,7 +21,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 
-const menuItems = [
+const allMenuItems = [
   { name: "Employees", icon: Users, href: "/employees" },
   { name: "Clients", icon: Briefcase, href: "/clients" },
   { name: "Products", icon: Package, href: "/products" },
@@ -31,15 +31,27 @@ const menuItems = [
   { name: "Business Analytics", icon: BarChart3, href: "/analytics" },
 ];
 
+// Menu items visible to STAFF role
+const staffMenuItems = [
+  { name: "Employees", icon: Users, href: "/employees" },
+  { name: "Clients", icon: Briefcase, href: "/clients" },
+  { name: "Products", icon: Package, href: "/products" },
+  { name: "Job Cards", icon: FileText, href: "/job-cards" },
+];
+
 interface SidebarContentProps {
   pathname: string;
   employee: {
     firstName: string;
     lastName: string;
     email: string;
+    role: {
+      name: string;
+    } | null;
   } | null;
   onLogout: () => void;
   onItemClick?: () => void;
+  menuItems: typeof allMenuItems;
 }
 
 const SidebarContent = ({
@@ -47,6 +59,7 @@ const SidebarContent = ({
   employee,
   onLogout,
   onItemClick,
+  menuItems,
 }: SidebarContentProps) => (
   <div
     className="flex flex-col h-full bg-card"
@@ -139,6 +152,10 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const { employee } = useAppSelector((state) => state.auth);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
+  // Filter menu items based on user role
+  const menuItems =
+    employee?.role?.name === "DIRECTOR" ? allMenuItems : staffMenuItems;
+
   const handleLogout = () => {
     dispatch(logout());
     router.push("/login");
@@ -152,6 +169,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           pathname={pathname}
           employee={employee}
           onLogout={handleLogout}
+          menuItems={menuItems}
         />
       </aside>
 
@@ -183,6 +201,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                 employee={employee}
                 onLogout={handleLogout}
                 onItemClick={() => setMobileMenuOpen(false)}
+                menuItems={menuItems}
               />
             </SheetContent>
           </Sheet>

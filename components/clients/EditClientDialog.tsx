@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import { useAppDispatch } from "@/lib/hooks";
+import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import { updateClient } from "@/lib/slices/clientSlice";
 import {
   Dialog,
@@ -50,8 +50,12 @@ export function EditClientDialog({
   onSuccess,
 }: EditClientDialogProps) {
   const dispatch = useAppDispatch();
-  const { employees, isLoading: employeesLoading, error: employeesError } =
-    useEmployees();
+  const {
+    employees,
+    isLoading: employeesLoading,
+    error: employeesError,
+  } = useEmployees();
+  const { error: clientError } = useAppSelector((state) => state.client);
   const [isLoading, setIsLoading] = useState(false);
 
   const form = useForm<UpdateClientData>({
@@ -115,7 +119,8 @@ export function EditClientDialog({
           data.alternatePhone && data.alternatePhone.trim() !== ""
             ? data.alternatePhone
             : null,
-        address: data.address && data.address.trim() !== "" ? data.address : null,
+        address:
+          data.address && data.address.trim() !== "" ? data.address : null,
         city: data.city && data.city.trim() !== "" ? data.city : null,
         state: data.state && data.state.trim() !== "" ? data.state : null,
         country:
@@ -124,17 +129,22 @@ export function EditClientDialog({
           data.postalCode && data.postalCode.trim() !== ""
             ? data.postalCode
             : null,
-        website: data.website && data.website.trim() !== "" ? data.website : null,
+        website:
+          data.website && data.website.trim() !== "" ? data.website : null,
         taxId: data.taxId && data.taxId.trim() !== "" ? data.taxId : null,
         notes: data.notes && data.notes.trim() !== "" ? data.notes : null,
         assignedToId:
-          data.assignedToId && data.assignedToId !== "" ? data.assignedToId : null,
+          data.assignedToId && data.assignedToId !== ""
+            ? data.assignedToId
+            : null,
         broughtInById:
           data.broughtInById && data.broughtInById !== ""
             ? data.broughtInById
             : null,
       };
-      await dispatch(updateClient({ id: client.id, data: cleanedData })).unwrap();
+      await dispatch(
+        updateClient({ id: client.id, data: cleanedData })
+      ).unwrap();
       onSuccess();
     } catch {
       // Error is handled by Redux state
@@ -152,10 +162,10 @@ export function EditClientDialog({
             Update client information. Changes will be saved immediately.
           </DialogDescription>
         </DialogHeader>
-        {employeesError && (
+        {(employeesError || clientError) && (
           <Alert variant="destructive" className="mx-6">
             <AlertDescription className="font-medium text-red-500">
-              {employeesError}
+              {employeesError || clientError}
             </AlertDescription>
           </Alert>
         )}
@@ -557,7 +567,11 @@ export function EditClientDialog({
               >
                 Cancel
               </Button>
-              <Button type="submit" disabled={isLoading} className="w-full sm:w-auto">
+              <Button
+                type="submit"
+                disabled={isLoading}
+                className="w-full sm:w-auto"
+              >
                 {isLoading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -574,4 +588,3 @@ export function EditClientDialog({
     </Dialog>
   );
 }
-

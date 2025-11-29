@@ -74,7 +74,7 @@ export function CreateEmployeeDialog({
             ? data.department
             : null,
         phone: data.phone && data.phone.trim() !== "" ? data.phone : null,
-        roleId: data.roleId && data.roleId !== "" ? data.roleId : null,
+        roleId: data.roleId && data.roleId !== "" ? data.roleId : undefined,
       };
       await dispatch(createEmployee(cleanedData)).unwrap();
       form.reset();
@@ -231,9 +231,10 @@ export function CreateEmployeeDialog({
               <FormField
                 control={form.control}
                 name="roleId"
+                rules={{ required: "Role is required" }}
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Role (Optional)</FormLabel>
+                    <FormLabel>Role</FormLabel>
                     <Select
                       onValueChange={(value) => {
                         field.onChange(value);
@@ -243,7 +244,7 @@ export function CreateEmployeeDialog({
                     >
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select a role (optional)" />
+                          <SelectValue placeholder="Select a role" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>

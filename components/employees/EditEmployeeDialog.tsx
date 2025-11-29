@@ -103,6 +103,7 @@ export function EditEmployeeDialog({
       onSuccess();
     } catch {
       // Error is handled by Redux state
+      onOpenChange(false);
     } finally {
       setIsLoading(false);
     }
