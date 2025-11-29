@@ -84,16 +84,12 @@ export async function getJobCardById(id: string): Promise<JobCard> {
 export async function getJobCardByJobNumber(
   jobNumber: string
 ): Promise<JobCard> {
-  const response = await api.get<JobCard>(
-    `/job-cards/job-number/${jobNumber}`
-  );
+  const response = await api.get<JobCard>(`/job-cards/job-number/${jobNumber}`);
   return response.data;
 }
 
 // Create job card
-export async function createJobCard(
-  data: CreateJobCardData
-): Promise<JobCard> {
+export async function createJobCard(data: CreateJobCardData): Promise<JobCard> {
   const response = await api.post<JobCard>("/job-cards", data);
   return response.data;
 }
@@ -113,7 +109,7 @@ export async function deleteJobCard(id: string): Promise<void> {
 }
 
 // Task types and functions
-export type CreateJobTaskData = {
+export type CreateJobTaskInput = {
   jobCardId: string;
   moduleName?: string | null;
   taskType?: string | null;
@@ -132,9 +128,12 @@ export type UpdateJobTaskData = Partial<{
 
 export async function createTask(
   jobCardId: string,
-  data: Omit<CreateJobTaskData, "jobCardId">
+  data: Omit<CreateJobTaskInput, "jobCardId">
 ): Promise<JobTask> {
-  const response = await api.post<JobTask>(`/job-cards/${jobCardId}/tasks`, data);
+  const response = await api.post<JobTask>(
+    `/job-cards/${jobCardId}/tasks`,
+    data
+  );
   return response.data;
 }
 
@@ -151,7 +150,7 @@ export async function deleteTask(id: string): Promise<void> {
 }
 
 // Expense types and functions
-export type CreateJobExpenseData = {
+export type CreateJobExpenseInput = {
   jobCardId: string;
   category: string;
   description?: string | null;
@@ -170,7 +169,7 @@ export type UpdateJobExpenseData = Partial<{
 
 export async function createExpense(
   jobCardId: string,
-  data: Omit<CreateJobExpenseData, "jobCardId">
+  data: Omit<CreateJobExpenseInput, "jobCardId">
 ): Promise<JobExpense> {
   const response = await api.post<JobExpense>(
     `/job-cards/${jobCardId}/expenses`,
@@ -232,4 +231,3 @@ export const jobCardService = {
   updateExpense,
   deleteExpense,
 };
-
