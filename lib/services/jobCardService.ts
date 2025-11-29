@@ -7,6 +7,16 @@ import type {
   PaginationOptions,
 } from "../types";
 
+export type CreateJobTaskData = Omit<
+  JobTask,
+  "id" | "jobCardId" | "createdAt" | "updatedAt"
+>;
+
+export type CreateJobExpenseData = Omit<
+  JobExpense,
+  "id" | "jobCardId" | "createdAt" | "updatedAt"
+>;
+
 export type CreateJobCardData = Omit<
   JobCard,
   | "id"
@@ -23,6 +33,8 @@ export type CreateJobCardData = Omit<
 > & {
   clientId: string;
   supportStaffId?: string | null;
+  tasks?: CreateJobTaskData[];
+  expenses?: CreateJobExpenseData[];
 };
 
 export type UpdateJobCardData = Partial<

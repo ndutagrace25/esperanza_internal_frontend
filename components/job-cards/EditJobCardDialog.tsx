@@ -117,13 +117,7 @@ export function EditJobCardDialog({
       location: jobCard.location ?? undefined,
       contactPerson: jobCard.contactPerson ?? undefined,
       purpose: jobCard.purpose ?? undefined,
-      estimatedDuration: jobCard.estimatedDuration ?? undefined,
-      estimatedCost: jobCard.estimatedCost ?? undefined,
-      startTime: formatTimeForInput(jobCard.startTime),
-      endTime: formatTimeForInput(jobCard.endTime),
       workSummary: jobCard.workSummary ?? undefined,
-      findings: jobCard.findings ?? undefined,
-      recommendations: jobCard.recommendations ?? undefined,
       status: jobCard.status,
       supportStaffId: jobCard.supportStaffId ?? undefined,
     },
@@ -138,13 +132,7 @@ export function EditJobCardDialog({
         location: jobCard.location ?? undefined,
         contactPerson: jobCard.contactPerson ?? undefined,
         purpose: jobCard.purpose ?? undefined,
-        estimatedDuration: jobCard.estimatedDuration ?? undefined,
-        estimatedCost: jobCard.estimatedCost ?? undefined,
-        startTime: formatTimeForInput(jobCard.startTime),
-        endTime: formatTimeForInput(jobCard.endTime),
         workSummary: jobCard.workSummary ?? undefined,
-        findings: jobCard.findings ?? undefined,
-        recommendations: jobCard.recommendations ?? undefined,
         status: jobCard.status,
         supportStaffId: jobCard.supportStaffId ?? undefined,
       });
@@ -173,32 +161,9 @@ export function EditJobCardDialog({
             : null,
         purpose:
           data.purpose && data.purpose.trim() !== "" ? data.purpose : null,
-        estimatedDuration:
-          data.estimatedDuration !== undefined &&
-          data.estimatedDuration !== null
-            ? data.estimatedDuration
-            : null,
-        estimatedCost:
-          data.estimatedCost && data.estimatedCost.trim() !== ""
-            ? data.estimatedCost
-            : null,
-        startTime:
-          data.startTime && data.visitDate
-            ? new Date(`${data.visitDate}T${data.startTime}:00`).toISOString()
-            : null,
-        endTime:
-          data.endTime && data.visitDate
-            ? new Date(`${data.visitDate}T${data.endTime}:00`).toISOString()
-            : null,
         workSummary:
           data.workSummary && data.workSummary.trim() !== ""
             ? data.workSummary
-            : null,
-        findings:
-          data.findings && data.findings.trim() !== "" ? data.findings : null,
-        recommendations:
-          data.recommendations && data.recommendations.trim() !== ""
-            ? data.recommendations
             : null,
         supportStaffId:
           data.supportStaffId && data.supportStaffId !== ""
@@ -233,8 +198,6 @@ export function EditJobCardDialog({
             moduleName: task.moduleName,
             taskType: task.taskType,
             description: task.description,
-            startTime: task.startTime,
-            endTime: task.endTime,
           };
           await updateTask(task.id, updateData);
         }
@@ -278,8 +241,6 @@ export function EditJobCardDialog({
         moduleName: null,
         taskType: null,
         description: "",
-        startTime: null,
-        endTime: null,
       },
     ]);
   };
@@ -549,212 +510,33 @@ export function EditJobCardDialog({
               />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {/* Start Time */}
-              <FormField
-                control={form.control}
-                name="startTime"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Start Time</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="time"
-                        disabled={isLoading}
-                        className="h-11"
-                        {...field}
-                        value={field.value ?? ""}
-                        onChange={(e) => {
-                          const time = e.target.value;
-                          const date = form.getValues("visitDate");
-                          if (time && date) {
-                            field.onChange(time);
-                          } else {
-                            field.onChange(null);
-                          }
-                        }}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              {/* End Time */}
-              <FormField
-                control={form.control}
-                name="endTime"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>End Time</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="time"
-                        disabled={isLoading}
-                        className="h-11"
-                        {...field}
-                        value={field.value ?? ""}
-                        onChange={(e) => {
-                          const time = e.target.value;
-                          const date = form.getValues("visitDate");
-                          if (time && date) {
-                            field.onChange(time);
-                          } else {
-                            field.onChange(null);
-                          }
-                        }}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              {/* Support Staff */}
-              <FormField
-                control={form.control}
-                name="supportStaffId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Support Staff</FormLabel>
-                    <Select
-                      onValueChange={(value) => {
-                        field.onChange(value || null);
-                      }}
-                      value={field.value || undefined}
-                      disabled={isLoading || employeesLoading}
-                    >
-                      <FormControl>
-                        <SelectTrigger className="h-11">
-                          <SelectValue placeholder="Select staff (optional)" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent className="bg-white">
-                        {employees.map((employee) => (
-                          <SelectItem key={employee.id} value={employee.id}>
-                            {employee.firstName} {employee.lastName}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Estimated Duration */}
-              <FormField
-                control={form.control}
-                name="estimatedDuration"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Estimated Duration (minutes)</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        placeholder="120"
-                        disabled={isLoading}
-                        className="h-11"
-                        {...field}
-                        value={field.value ?? ""}
-                        onChange={(e) => {
-                          const value = e.target.value;
-                          field.onChange(
-                            value === "" ? null : parseInt(value, 10)
-                          );
-                        }}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              {/* Estimated Cost */}
-              <FormField
-                control={form.control}
-                name="estimatedCost"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Estimated Cost</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        step="0.01"
-                        placeholder="0.00"
-                        disabled={isLoading}
-                        className="h-11"
-                        {...field}
-                        value={field.value ?? ""}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            {/* Work Summary */}
+            {/* Support Staff */}
             <FormField
               control={form.control}
-              name="workSummary"
+              name="supportStaffId"
+              rules={{ required: "Support staff is required" }}
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Work Summary</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder="Overall work done summary..."
-                      disabled={isLoading}
-                      rows={3}
-                      {...field}
-                      value={field.value ?? ""}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            {/* Findings */}
-            <FormField
-              control={form.control}
-              name="findings"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Findings</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder="Findings from the visit..."
-                      disabled={isLoading}
-                      rows={3}
-                      {...field}
-                      value={field.value ?? ""}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            {/* Recommendations */}
-            <FormField
-              control={form.control}
-              name="recommendations"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Recommendations</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder="Recommendations..."
-                      disabled={isLoading}
-                      rows={3}
-                      {...field}
-                      value={field.value ?? ""}
-                    />
-                  </FormControl>
-                  <FormMessage />
+                  <FormLabel>Support Staff *</FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    value={field.value || undefined}
+                    disabled={isLoading || employeesLoading}
+                  >
+                    <FormControl>
+                      <SelectTrigger className="h-11">
+                        <SelectValue placeholder="Select staff" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent className="bg-white">
+                      {employees.map((employee) => (
+                        <SelectItem key={employee.id} value={employee.id}>
+                          {employee.firstName} {employee.lastName}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage className="text-red-500"/>
                 </FormItem>
               )}
             />
@@ -765,9 +547,9 @@ export function EditJobCardDialog({
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="text-lg font-semibold">Tasks</h3>
+                  <h3 className="text-lg font-semibold">Tasks *</h3>
                   <p className="text-sm text-muted-foreground">
-                    Manage tasks performed during this job
+                    Manage tasks performed during this job (at least one task is required)
                   </p>
                 </div>
                 <Button
@@ -849,87 +631,6 @@ export function EditJobCardDialog({
                                   e.target.value || null
                                 )
                               }
-                              disabled={isLoading}
-                              className="h-9"
-                            />
-                          </div>
-                        </div>
-                        <div>
-                          <label className="text-sm font-medium mb-1 block">
-                            Description *
-                          </label>
-                          <Textarea
-                            placeholder="Describe the task..."
-                            value={task.description}
-                            onChange={(e) =>
-                              updateTaskField(
-                                taskId,
-                                "description",
-                                e.target.value
-                              )
-                            }
-                            disabled={isLoading}
-                            rows={2}
-                            className="resize-none"
-                          />
-                        </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                          <div>
-                            <label className="text-sm font-medium mb-1 block">
-                              Start Time
-                            </label>
-                            <Input
-                              type="time"
-                              value={
-                                task.startTime
-                                  ? new Date(task.startTime)
-                                      .toTimeString()
-                                      .slice(0, 5)
-                                  : ""
-                              }
-                              onChange={(e) => {
-                                const time = e.target.value;
-                                const visitDate = form.getValues("visitDate");
-                                updateTaskField(
-                                  taskId,
-                                  "startTime",
-                                  time && visitDate
-                                    ? new Date(
-                                        `${visitDate}T${time}`
-                                      ).toISOString()
-                                    : null
-                                );
-                              }}
-                              disabled={isLoading}
-                              className="h-9"
-                            />
-                          </div>
-                          <div>
-                            <label className="text-sm font-medium mb-1 block">
-                              End Time
-                            </label>
-                            <Input
-                              type="time"
-                              value={
-                                task.endTime
-                                  ? new Date(task.endTime)
-                                      .toTimeString()
-                                      .slice(0, 5)
-                                  : ""
-                              }
-                              onChange={(e) => {
-                                const time = e.target.value;
-                                const visitDate = form.getValues("visitDate");
-                                updateTaskField(
-                                  taskId,
-                                  "endTime",
-                                  time && visitDate
-                                    ? new Date(
-                                        `${visitDate}T${time}`
-                                      ).toISOString()
-                                    : null
-                                );
-                              }}
                               disabled={isLoading}
                               className="h-9"
                             />
@@ -1040,25 +741,6 @@ export function EditJobCardDialog({
                             />
                           </div>
                         </div>
-                        <div>
-                          <label className="text-sm font-medium mb-1 block">
-                            Description
-                          </label>
-                          <Textarea
-                            placeholder="Expense description..."
-                            value={expense.description ?? ""}
-                            onChange={(e) =>
-                              updateExpenseField(
-                                expenseId,
-                                "description",
-                                e.target.value || null
-                              )
-                            }
-                            disabled={isLoading}
-                            rows={2}
-                            className="resize-none"
-                          />
-                        </div>
                         <div className="flex items-center space-x-2">
                           <Checkbox
                             id={`receipt-${expenseId}`}
@@ -1085,6 +767,27 @@ export function EditJobCardDialog({
                 </div>
               )}
             </div>
+
+            {/* Work Summary */}
+            <FormField
+              control={form.control}
+              name="workSummary"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Work Summary</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      placeholder="Overall work done summary..."
+                      disabled={isLoading}
+                      rows={3}
+                      {...field}
+                      value={field.value ?? ""}
+                    />
+                  </FormControl>
+                  <FormMessage className="text-red-500"/>
+                </FormItem>
+              )}
+            />
 
             <DialogFooter className="flex-col sm:flex-row gap-2">
               <Button
