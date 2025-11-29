@@ -104,12 +104,6 @@ export function EditJobCardDialog({
     return date.toISOString().split("T")[0];
   };
 
-  const formatTimeForInput = (dateString: string | null) => {
-    if (!dateString) return "";
-    const date = new Date(dateString);
-    return date.toTimeString().slice(0, 5); // HH:MM format
-  };
-
   const form = useForm<UpdateJobCardData>({
     defaultValues: {
       clientId: jobCard.clientId,
@@ -241,6 +235,8 @@ export function EditJobCardDialog({
         moduleName: null,
         taskType: null,
         description: "",
+        startTime: null,
+        endTime: null,
       },
     ]);
   };
@@ -536,7 +532,7 @@ export function EditJobCardDialog({
                       ))}
                     </SelectContent>
                   </Select>
-                  <FormMessage className="text-red-500"/>
+                  <FormMessage className="text-red-500" />
                 </FormItem>
               )}
             />
@@ -549,7 +545,8 @@ export function EditJobCardDialog({
                 <div>
                   <h3 className="text-lg font-semibold">Tasks *</h3>
                   <p className="text-sm text-muted-foreground">
-                    Manage tasks performed during this job (at least one task is required)
+                    Manage tasks performed during this job (at least one task is
+                    required)
                   </p>
                 </div>
                 <Button
@@ -784,7 +781,7 @@ export function EditJobCardDialog({
                       value={field.value ?? ""}
                     />
                   </FormControl>
-                  <FormMessage className="text-red-500"/>
+                  <FormMessage className="text-red-500" />
                 </FormItem>
               )}
             />
