@@ -5,6 +5,7 @@ import clientReducer from "./slices/clientSlice";
 import productCategoryReducer from "./slices/productCategorySlice";
 import productReducer from "./slices/productSlice";
 import jobCardReducer from "./slices/jobCardSlice";
+import saleReducer from "./slices/saleSlice";
 
 export const store = configureStore({
   reducer: {
@@ -14,6 +15,7 @@ export const store = configureStore({
     productCategory: productCategoryReducer,
     product: productReducer,
     jobCard: jobCardReducer,
+    sale: saleReducer,
   },
 });
 

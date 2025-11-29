@@ -206,6 +206,45 @@ export type JobCard = {
   updatedAt: string;
 };
 
+// Sale types
+export type SaleItem = {
+  id: string;
+  saleId: string;
+  productId: string;
+  product: {
+    id: string;
+    name: string;
+    description: string | null;
+    sku: string | null;
+    barcode: string | null;
+  };
+  quantity: number;
+  unitPrice: string; // Decimal as string
+  totalPrice: string; // Decimal as string
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type Sale = {
+  id: string;
+  saleNumber: string;
+  clientId: string;
+  client: {
+    id: string;
+    companyName: string;
+    contactPerson: string | null;
+    email: string | null;
+    phone: string | null;
+  };
+  saleDate: string;
+  status: string;
+  totalAmount: string; // Decimal as string
+  notes: string | null;
+  items: SaleItem[];
+  createdAt: string;
+  updatedAt: string;
+};
+
 // API Error types
 export type ApiError = {
   error: string;
