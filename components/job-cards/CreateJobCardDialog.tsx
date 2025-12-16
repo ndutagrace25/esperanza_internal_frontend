@@ -33,6 +33,7 @@ import {
 import { Loader2, Plus, Trash2 } from "lucide-react";
 import { useClients } from "@/lib/hooks/useClients";
 import { useEmployees } from "@/lib/hooks/useEmployees";
+import { useExpenseCategories } from "@/lib/hooks/useExpenseCategories";
 import type {
   CreateJobCardData,
   CreateJobTaskData,
@@ -64,6 +65,11 @@ export function CreateJobCardDialog({
     isLoading: employeesLoading,
     error: employeesError,
   } = useEmployees();
+  const {
+    categories: expenseCategories,
+    isLoading: categoriesLoading,
+    error: categoriesError,
+  } = useExpenseCategories();
   const [isLoading, setIsLoading] = useState(false);
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
 
@@ -236,10 +242,10 @@ export function CreateJobCardDialog({
             Fill in the details to create a new job card.
           </DialogDescription>
         </DialogHeader>
-        {(clientsError || employeesError) && (
+        {(clientsError || employeesError || categoriesError) && (
           <Alert variant="destructive" className="mx-6">
             <AlertDescription className="font-medium text-red-500">
-              {clientsError || employeesError}
+              {clientsError || employeesError || categoriesError}
             </AlertDescription>
           </Alert>
         )}
@@ -333,6 +339,7 @@ export function CreateJobCardDialog({
                       </FormControl>
                       <SelectContent className="bg-white">
                         <SelectItem value="DRAFT">Draft</SelectItem>
+                        <SelectItem value="IN_PROGRESS">In Progress</SelectItem>
                         <SelectItem value="PENDING_CLIENT_CONFIRMATION">
                           Pending Confirmation
                         </SelectItem>
@@ -593,19 +600,29 @@ export function CreateJobCardDialog({
                           <label className="text-sm font-medium mb-1 block">
                             Category *
                           </label>
-                          <Input
-                            placeholder="e.g., Transport, Materials"
+                          <Select
                             value={expense.category}
-                            onChange={(e) =>
-                              updateExpense(
-                                expense.tempId,
-                                "category",
-                                e.target.value
-                              )
+                            onValueChange={(value) =>
+                              updateExpense(expense.tempId, "category", value)
                             }
-                            disabled={isLoading}
-                            className="h-9"
-                          />
+                            disabled={isLoading || categoriesLoading}
+                          >
+                            <SelectTrigger className="h-9">
+                              <SelectValue placeholder="Select category" />
+                            </SelectTrigger>
+                            <SelectContent className="bg-white">
+                              {expenseCategories
+                                .filter((cat) => cat.status === "active")
+                                .map((category) => (
+                                  <SelectItem
+                                    key={category.id}
+                                    value={category.name}
+                                  >
+                                    {category.name}
+                                  </SelectItem>
+                                ))}
+                            </SelectContent>
+                          </Select>
                         </div>
                         <div>
                           <label className="text-sm font-medium mb-1 block">

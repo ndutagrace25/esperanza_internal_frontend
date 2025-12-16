@@ -122,18 +122,21 @@ export function JobCardsTable({
     }
   };
 
-  const getStatusBadgeVariant = (status: string) => {
+  // Returns custom class names for status badges - text color only
+  const getStatusBadgeStyles = (status: string) => {
     switch (status) {
       case "COMPLETED":
-        return "default";
+        return "bg-transparent text-emerald-600 border-emerald-300 dark:text-emerald-400 dark:border-emerald-700";
+      case "IN_PROGRESS":
+        return "bg-transparent text-blue-600 border-blue-300 dark:text-blue-400 dark:border-blue-700";
       case "PENDING_CLIENT_CONFIRMATION":
-        return "secondary";
+        return "bg-transparent text-amber-600 border-amber-300 dark:text-amber-400 dark:border-amber-700";
       case "DRAFT":
-        return "outline";
+        return "bg-transparent text-slate-500 border-slate-300 dark:text-slate-400 dark:border-slate-600";
       case "CANCELLED":
-        return "destructive";
+        return "bg-transparent text-red-600 border-red-300 dark:text-red-400 dark:border-red-700";
       default:
-        return "secondary";
+        return "bg-transparent text-gray-600 border-gray-300";
     }
   };
 
@@ -141,6 +144,8 @@ export function JobCardsTable({
     switch (status) {
       case "DRAFT":
         return "Draft";
+      case "IN_PROGRESS":
+        return "In Progress";
       case "PENDING_CLIENT_CONFIRMATION":
         return "Pending";
       case "COMPLETED":
@@ -281,7 +286,9 @@ export function JobCardsTable({
                     </div>
                   </TableCell>
                   <TableCell className="hidden sm:table-cell">
-                    <Badge variant={getStatusBadgeVariant(jobCard.status)}>
+                    <Badge
+                      className={`border ${getStatusBadgeStyles(jobCard.status)}`}
+                    >
                       {getStatusLabel(jobCard.status)}
                     </Badge>
                   </TableCell>

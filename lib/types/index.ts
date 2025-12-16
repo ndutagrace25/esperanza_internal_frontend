@@ -245,6 +245,84 @@ export type Sale = {
   updatedAt: string;
 };
 
+// Expense Category types
+export type ExpenseCategory = {
+  id: string;
+  name: string;
+  description: string | null;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+// Expense types
+export type ExpenseStatus =
+  | "DRAFT"
+  | "PENDING"
+  | "APPROVED"
+  | "PAID"
+  | "REJECTED"
+  | "CANCELLED";
+
+export type PaymentMethod =
+  | "CASH"
+  | "BANK_TRANSFER"
+  | "MPESA"
+  | "CHEQUE"
+  | "CREDIT_CARD"
+  | "DEBIT_CARD"
+  | "OTHER";
+
+export type Expense = {
+  id: string;
+  expenseNumber: string;
+  categoryId: string;
+  category: {
+    id: string;
+    name: string;
+  };
+  description: string;
+  amount: string; // Decimal as string
+  expenseDate: string;
+  vendor: string | null;
+  referenceNumber: string | null;
+  paymentMethod: PaymentMethod | null;
+  status: ExpenseStatus;
+  hasReceipt: boolean;
+  receiptUrl: string | null;
+  notes: string | null;
+  jobCardId: string | null;
+  jobCard: {
+    id: string;
+    jobNumber: string;
+    visitDate: string;
+    client: {
+      id: string;
+      companyName: string;
+    };
+  } | null;
+  jobExpenseId: string | null;
+  submittedById: string | null;
+  submittedBy: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+  } | null;
+  approvedById: string | null;
+  approvedBy: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+  } | null;
+  approvedAt: string | null;
+  rejectedAt: string | null;
+  rejectionReason: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
 // API Error types
 export type ApiError = {
   error: string;

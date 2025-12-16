@@ -33,6 +33,7 @@ import {
 import { Loader2, Plus, Trash2 } from "lucide-react";
 import { useClients } from "@/lib/hooks/useClients";
 import { useEmployees } from "@/lib/hooks/useEmployees";
+import { useExpenseCategories } from "@/lib/hooks/useExpenseCategories";
 import type { JobCard, JobTask, JobExpense } from "@/lib/types";
 import type {
   UpdateJobCardData,
@@ -75,6 +76,11 @@ export function EditJobCardDialog({
     isLoading: employeesLoading,
     error: employeesError,
   } = useEmployees();
+  const {
+    categories: expenseCategories,
+    isLoading: categoriesLoading,
+    error: categoriesError,
+  } = useExpenseCategories();
   const [isLoading, setIsLoading] = useState(false);
 
   // Tasks and expenses state
@@ -347,10 +353,10 @@ export function EditJobCardDialog({
             Update the job card details below.
           </DialogDescription>
         </DialogHeader>
-        {(clientsError || employeesError) && (
+        {(clientsError || employeesError || categoriesError) && (
           <Alert variant="destructive" className="mx-6">
             <AlertDescription className="font-medium text-red-500">
-              {clientsError || employeesError}
+              {clientsError || employeesError || categoriesError}
             </AlertDescription>
           </Alert>
         )}
@@ -703,19 +709,29 @@ export function EditJobCardDialog({
                             <label className="text-sm font-medium mb-1 block">
                               Category *
                             </label>
-                            <Input
-                              placeholder="e.g., Transport, Materials"
+                            <Select
                               value={expense.category}
-                              onChange={(e) =>
-                                updateExpenseField(
-                                  expenseId,
-                                  "category",
-                                  e.target.value
-                                )
+                              onValueChange={(value) =>
+                                updateExpenseField(expenseId, "category", value)
                               }
-                              disabled={isLoading}
-                              className="h-9"
-                            />
+                              disabled={isLoading || categoriesLoading}
+                            >
+                              <SelectTrigger className="h-9">
+                                <SelectValue placeholder="Select category" />
+                              </SelectTrigger>
+                              <SelectContent className="bg-white">
+                                {expenseCategories
+                                  .filter((cat) => cat.status === "active")
+                                  .map((category) => (
+                                    <SelectItem
+                                      key={category.id}
+                                      value={category.name}
+                                    >
+                                      {category.name}
+                                    </SelectItem>
+                                  ))}
+                              </SelectContent>
+                            </Select>
                           </div>
                           <div>
                             <label className="text-sm font-medium mb-1 block">
