@@ -60,9 +60,12 @@ export function EditClientIntegrationDialog({
     setIsLoading(true);
     try {
       await dispatch(
-        updateIntegration(integration.id, {
-          label: trimmedLabel,
-          value: trimmedValue,
+        updateIntegration({
+          id: integration.id,
+          data: {
+            label: trimmedLabel,
+            value: trimmedValue,
+          },
         })
       ).unwrap();
       onSuccess();
