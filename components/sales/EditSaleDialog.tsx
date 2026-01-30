@@ -23,13 +23,12 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import Select from "react-select";
+
+interface SelectOption {
+  value: string;
+  label: string;
+}
 import { Loader2, Plus, Trash2 } from "lucide-react";
 import { useClients } from "@/lib/hooks/useClients";
 import { useProducts } from "@/lib/hooks/useProducts";
@@ -77,20 +76,20 @@ export function EditSaleDialog({
   type ItemItem =
     | Sale["items"][0]
     | (Omit<
-        Sale["items"][0],
-        "id" | "saleId" | "createdAt" | "updatedAt" | "product"
-      > & {
-        tempId: string;
-        isNew: true;
-        productId: string;
-        product: {
-          id: string;
-          name: string;
-          description: string | null;
-          sku: string | null;
-          barcode: string | null;
-        };
-      });
+      Sale["items"][0],
+      "id" | "saleId" | "createdAt" | "updatedAt" | "product"
+    > & {
+      tempId: string;
+      isNew: true;
+      productId: string;
+      product: {
+        id: string;
+        name: string;
+        description: string | null;
+        sku: string | null;
+        barcode: string | null;
+      };
+    });
 
   const [items, setItems] = useState<ItemItem[]>([]);
   const [deletedItemIds, setDeletedItemIds] = useState<string[]>([]);
@@ -139,7 +138,7 @@ export function EditSaleDialog({
           : undefined,
         agreedMonthlyInstallmentAmount:
           data.agreedMonthlyInstallmentAmount != null &&
-          String(data.agreedMonthlyInstallmentAmount).trim() !== ""
+            String(data.agreedMonthlyInstallmentAmount).trim() !== ""
             ? String(data.agreedMonthlyInstallmentAmount)
             : undefined,
         notes: data.notes && data.notes.trim() !== "" ? data.notes : null,
@@ -218,19 +217,19 @@ export function EditSaleDialog({
           "isNew" in item && item.isNew
             ? item.tempId
             : "id" in item
-            ? item.id
-            : "";
+              ? item.id
+              : "";
         if (id === itemIdOrTempId) {
           if (field === "productId") {
             const selectedProduct = products.find((p) => p.id === value);
             const updatedProduct = selectedProduct
               ? {
-                  id: selectedProduct.id,
-                  name: selectedProduct.name,
-                  description: selectedProduct.description,
-                  sku: selectedProduct.sku,
-                  barcode: selectedProduct.barcode,
-                }
+                id: selectedProduct.id,
+                name: selectedProduct.name,
+                description: selectedProduct.description,
+                sku: selectedProduct.sku,
+                barcode: selectedProduct.barcode,
+              }
               : item.product;
 
             // For existing items, we can't change productId, but we update the product reference
@@ -306,30 +305,33 @@ export function EditSaleDialog({
               control={form.control}
               name="clientId"
               rules={{ required: "Client is required" }}
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Client *</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    value={field.value}
-                    disabled={isLoading || clientsLoading}
-                  >
-                    <FormControl>
-                      <SelectTrigger className="h-11">
-                        <SelectValue placeholder="Select client" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent className="bg-white">
-                      {clients.map((client) => (
-                        <SelectItem key={client.id} value={client.id}>
-                          {client.companyName}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
+              render={({ field }) => {
+                const clientOptions: SelectOption[] = clients.map((client) => ({
+                  value: client.id,
+                  label: client.companyName,
+                }));
+                return (
+                  <FormItem>
+                    <FormLabel>Client *</FormLabel>
+                    <Select<SelectOption>
+                      instanceId="edit-sale-client-select"
+                      options={clientOptions}
+                      value={clientOptions.find((opt) => opt.value === field.value) || null}
+                      onChange={(option) => field.onChange(option?.value || null)}
+                      placeholder="Select client"
+                      isDisabled={isLoading || clientsLoading}
+                      isLoading={clientsLoading}
+                      isClearable={false}
+                      isSearchable
+                      styles={{
+                        control: (base) => ({ ...base, minHeight: "44px" }),
+                        menu: (base) => ({ ...base, zIndex: 9999 }),
+                      }}
+                    />
+                    <FormMessage />
+                  </FormItem>
+                );
+              }}
             />
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -358,29 +360,34 @@ export function EditSaleDialog({
               <FormField
                 control={form.control}
                 name="status"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Status</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      value={field.value}
-                      disabled={isLoading}
-                    >
-                      <FormControl>
-                        <SelectTrigger className="h-11">
-                          <SelectValue placeholder="Select status" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent className="bg-white">
-                        <SelectItem value="DRAFT">Draft</SelectItem>
-                        <SelectItem value="PENDING">Pending</SelectItem>
-                        <SelectItem value="COMPLETED">Completed</SelectItem>
-                        <SelectItem value="CANCELLED">Cancelled</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
+                render={({ field }) => {
+                  const statusOptions: SelectOption[] = [
+                    { value: "DRAFT", label: "Draft" },
+                    { value: "PENDING", label: "Pending" },
+                    { value: "COMPLETED", label: "Completed" },
+                    { value: "CANCELLED", label: "Cancelled" },
+                  ];
+                  return (
+                    <FormItem>
+                      <FormLabel>Status</FormLabel>
+                      <Select<SelectOption>
+                        instanceId="edit-sale-status-select"
+                        options={statusOptions}
+                        value={statusOptions.find((opt) => opt.value === field.value) || null}
+                        onChange={(option) => field.onChange(option?.value || null)}
+                        placeholder="Select status"
+                        isDisabled={isLoading}
+                        isClearable={false}
+                        isSearchable
+                        styles={{
+                          control: (base) => ({ ...base, minHeight: "44px" }),
+                          menu: (base) => ({ ...base, zIndex: 9999 }),
+                        }}
+                      />
+                      <FormMessage />
+                    </FormItem>
+                  );
+                }}
               />
 
               {/* Agreed monthly installment (optional) */}
@@ -450,8 +457,8 @@ export function EditSaleDialog({
                       "isNew" in item && item.isNew
                         ? item.tempId
                         : "id" in item
-                        ? item.id
-                        : "";
+                          ? item.id
+                          : "";
                     return (
                       <div
                         key={itemId}
@@ -477,33 +484,35 @@ export function EditSaleDialog({
                             <label className="text-sm font-medium mb-1 block">
                               Product *
                             </label>
-                            <Select
-                              value={
+                            <Select<SelectOption>
+                              instanceId={`edit-product-select-${itemId}`}
+                              options={products.map((product) => ({
+                                value: product.id,
+                                label: product.name,
+                              }))}
+                              value={products.map((product) => ({
+                                value: product.id,
+                                label: product.name,
+                              })).find((opt) => opt.value === (
                                 "isNew" in item && item.isNew
                                   ? item.productId
                                   : "id" in item && item.product
-                                  ? item.product.id
-                                  : ""
+                                    ? item.product.id
+                                    : ""
+                              )) || null}
+                              onChange={(option) =>
+                                updateItemField(itemId, "productId", option?.value || "")
                               }
-                              onValueChange={(value) =>
-                                updateItemField(itemId, "productId", value)
-                              }
-                              disabled={isLoading || productsLoading}
-                            >
-                              <SelectTrigger className="h-9">
-                                <SelectValue placeholder="Select product" />
-                              </SelectTrigger>
-                              <SelectContent className="bg-white">
-                                {products.map((product) => (
-                                  <SelectItem
-                                    key={product.id}
-                                    value={product.id}
-                                  >
-                                    {product.name}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
+                              placeholder="Select product"
+                              isDisabled={isLoading || productsLoading}
+                              isLoading={productsLoading}
+                              isClearable={false}
+                              isSearchable
+                              styles={{
+                                control: (base) => ({ ...base, minHeight: "36px" }),
+                                menu: (base) => ({ ...base, zIndex: 9999 }),
+                              }}
+                            />
                           </div>
                           <div>
                             <label className="text-sm font-medium mb-1 block">
@@ -551,13 +560,13 @@ export function EditSaleDialog({
                         {("isNew" in item && item.isNew
                           ? item.product.name
                           : "id" in item
-                          ? item.product.name
-                          : "") && (
-                          <div className="text-sm text-muted-foreground">
-                            Total: KES{" "}
-                            {calculateItemTotal(item.quantity, item.unitPrice)}
-                          </div>
-                        )}
+                            ? item.product.name
+                            : "") && (
+                            <div className="text-sm text-muted-foreground">
+                              Total: KES{" "}
+                              {calculateItemTotal(item.quantity, item.unitPrice)}
+                            </div>
+                          )}
                       </div>
                     );
                   })}

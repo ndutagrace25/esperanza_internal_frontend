@@ -6,13 +6,12 @@ import { ExpensesTable } from "@/components/expenses/ExpensesTable";
 import { CreateExpenseDialog } from "@/components/expenses/CreateExpenseDialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import ReactSelectBase from "react-select";
+
+interface SelectOption {
+  value: string;
+  label: string;
+}
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import { fetchExpenses, clearExpenseError } from "@/lib/slices/expenseSlice";
 import { Plus, Search, Loader2, Filter, X } from "lucide-react";
@@ -188,22 +187,37 @@ export default function ExpensesPage() {
           {/* Filter Row */}
           <div className="flex flex-col sm:flex-row gap-3">
             {/* Status Filter */}
-            <div className="flex items-center gap-2 flex-1 sm:flex-initial">
+            <div className="flex items-center gap-2 flex-1 sm:flex-initial sm:w-[180px]">
               <Filter className="h-4 w-4 text-muted-foreground hidden sm:block" />
-              <Select value={statusFilter} onValueChange={handleStatusChange}>
-                <SelectTrigger className="w-full sm:w-[160px]">
-                  <SelectValue placeholder="Status" />
-                </SelectTrigger>
-                <SelectContent className="bg-white">
-                  <SelectItem value="ALL">All Statuses</SelectItem>
-                  <SelectItem value="DRAFT">Draft</SelectItem>
-                  <SelectItem value="PENDING">Pending</SelectItem>
-                  <SelectItem value="APPROVED">Approved</SelectItem>
-                  <SelectItem value="PAID">Paid</SelectItem>
-                  <SelectItem value="REJECTED">Rejected</SelectItem>
-                  <SelectItem value="CANCELLED">Cancelled</SelectItem>
-                </SelectContent>
-              </Select>
+              <ReactSelectBase<SelectOption>
+                instanceId="expenses-status-filter"
+                options={[
+                  { value: "ALL", label: "All Statuses" },
+                  { value: "DRAFT", label: "Draft" },
+                  { value: "PENDING", label: "Pending" },
+                  { value: "APPROVED", label: "Approved" },
+                  { value: "PAID", label: "Paid" },
+                  { value: "REJECTED", label: "Rejected" },
+                  { value: "CANCELLED", label: "Cancelled" },
+                ] as SelectOption[]}
+                value={[
+                  { value: "ALL", label: "All Statuses" },
+                  { value: "DRAFT", label: "Draft" },
+                  { value: "PENDING", label: "Pending" },
+                  { value: "APPROVED", label: "Approved" },
+                  { value: "PAID", label: "Paid" },
+                  { value: "REJECTED", label: "Rejected" },
+                  { value: "CANCELLED", label: "Cancelled" },
+                ].find((opt) => opt.value === statusFilter) || null}
+                onChange={(option) => handleStatusChange(option?.value || "ALL")}
+                placeholder="Status"
+                isClearable={false}
+                isSearchable
+                styles={{
+                  control: (base) => ({ ...base, minHeight: "40px" }),
+                  menu: (base) => ({ ...base, zIndex: 9999 }),
+                }}
+              />
             </div>
 
             {/* Category Filter */}
@@ -221,11 +235,11 @@ export default function ExpensesPage() {
                   categoryFilter === "ALL"
                     ? { value: "ALL", label: "All Categories" }
                     : {
-                        value: categoryFilter,
-                        label:
-                          categories.find((c) => c.id === categoryFilter)
-                            ?.name || "",
-                      }
+                      value: categoryFilter,
+                      label:
+                        categories.find((c) => c.id === categoryFilter)
+                          ?.name || "",
+                    }
                 }
                 onChange={(option) =>
                   handleCategoryChange(option?.value || "ALL")
@@ -234,15 +248,13 @@ export default function ExpensesPage() {
                 placeholder="Category..."
                 classNames={{
                   control: (state) =>
-                    `!min-h-[40px] !border-input !bg-background !shadow-sm ${
-                      state.isFocused ? "!border-ring !ring-1 !ring-ring" : ""
+                    `!min-h-[40px] !border-input !bg-background !shadow-sm ${state.isFocused ? "!border-ring !ring-1 !ring-ring" : ""
                     }`,
                   menu: () => "!bg-white !border !shadow-md !z-50",
                   option: (state) =>
-                    `!cursor-pointer ${
-                      state.isSelected
-                        ? "!bg-primary !text-primary-foreground"
-                        : state.isFocused
+                    `!cursor-pointer ${state.isSelected
+                      ? "!bg-primary !text-primary-foreground"
+                      : state.isFocused
                         ? "!bg-accent"
                         : ""
                     }`,
@@ -278,16 +290,16 @@ export default function ExpensesPage() {
                   submittedByFilter === "ALL"
                     ? { value: "ALL", label: "All Employees" }
                     : {
-                        value: submittedByFilter,
-                        label: (() => {
-                          const emp = employees.find(
-                            (e) => e.id === submittedByFilter
-                          );
-                          return emp
-                            ? `${emp.firstName} ${emp.lastName}`
-                            : "";
-                        })(),
-                      }
+                      value: submittedByFilter,
+                      label: (() => {
+                        const emp = employees.find(
+                          (e) => e.id === submittedByFilter
+                        );
+                        return emp
+                          ? `${emp.firstName} ${emp.lastName}`
+                          : "";
+                      })(),
+                    }
                 }
                 onChange={(option) =>
                   handleSubmittedByChange(option?.value || "ALL")
@@ -296,15 +308,13 @@ export default function ExpensesPage() {
                 placeholder="Submitted by..."
                 classNames={{
                   control: (state) =>
-                    `!min-h-[40px] !border-input !bg-background !shadow-sm ${
-                      state.isFocused ? "!border-ring !ring-1 !ring-ring" : ""
+                    `!min-h-[40px] !border-input !bg-background !shadow-sm ${state.isFocused ? "!border-ring !ring-1 !ring-ring" : ""
                     }`,
                   menu: () => "!bg-white !border !shadow-md !z-50",
                   option: (state) =>
-                    `!cursor-pointer ${
-                      state.isSelected
-                        ? "!bg-primary !text-primary-foreground"
-                        : state.isFocused
+                    `!cursor-pointer ${state.isSelected
+                      ? "!bg-primary !text-primary-foreground"
+                      : state.isFocused
                         ? "!bg-accent"
                         : ""
                     }`,
@@ -336,9 +346,9 @@ export default function ExpensesPage() {
           <div className="p-12 text-center border rounded-lg bg-card">
             <p className="text-muted-foreground">
               {searchTerm ||
-              statusFilter !== "ALL" ||
-              categoryFilter !== "ALL" ||
-              submittedByFilter !== "ALL"
+                statusFilter !== "ALL" ||
+                categoryFilter !== "ALL" ||
+                submittedByFilter !== "ALL"
                 ? "No expenses found matching your filters."
                 : "No expenses found. Create your first expense to get started."}
             </p>

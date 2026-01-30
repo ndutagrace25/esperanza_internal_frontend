@@ -23,13 +23,12 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import Select from "react-select";
+
+interface SelectOption {
+  value: string;
+  label: string;
+}
 import { Checkbox } from "@/components/ui/checkbox";
 import { Loader2 } from "lucide-react";
 import { useExpenseCategories } from "@/lib/hooks/useExpenseCategories";
@@ -198,11 +197,11 @@ export function EditExpenseDialog({
                       value={
                         field.value
                           ? {
-                              value: field.value,
-                              label:
-                                categories.find((c) => c.id === field.value)
-                                  ?.name || "",
-                            }
+                            value: field.value,
+                            label:
+                              categories.find((c) => c.id === field.value)
+                                ?.name || "",
+                          }
                           : null
                       }
                       onChange={(option) =>
@@ -214,17 +213,15 @@ export function EditExpenseDialog({
                       placeholder="Search and select category..."
                       classNames={{
                         control: (state) =>
-                          `!min-h-[44px] !border-input !bg-background !shadow-sm ${
-                            state.isFocused
-                              ? "!border-ring !ring-1 !ring-ring"
-                              : ""
+                          `!min-h-[44px] !border-input !bg-background !shadow-sm ${state.isFocused
+                            ? "!border-ring !ring-1 !ring-ring"
+                            : ""
                           }`,
                         menu: () => "!bg-white !border !shadow-md !z-50",
                         option: (state) =>
-                          `!cursor-pointer ${
-                            state.isSelected
-                              ? "!bg-primary !text-primary-foreground"
-                              : state.isFocused
+                          `!cursor-pointer ${state.isSelected
+                            ? "!bg-primary !text-primary-foreground"
+                            : state.isFocused
                               ? "!bg-accent"
                               : ""
                           }`,
@@ -371,61 +368,68 @@ export function EditExpenseDialog({
               <FormField
                 control={form.control}
                 name="paymentMethod"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Payment Method</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      value={field.value || undefined}
-                      disabled={isLoading}
-                    >
-                      <FormControl>
-                        <SelectTrigger className="h-11">
-                          <SelectValue placeholder="Select payment method" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent className="bg-white">
-                        {paymentMethods.map((method) => (
-                          <SelectItem key={method.value} value={method.value}>
-                            {method.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
+                render={({ field }) => {
+                  const paymentMethodOptions: SelectOption[] = paymentMethods.map((method) => ({
+                    value: method.value,
+                    label: method.label,
+                  }));
+                  return (
+                    <FormItem>
+                      <FormLabel>Payment Method</FormLabel>
+                      <Select<SelectOption>
+                        instanceId="edit-expense-payment-method-select"
+                        options={paymentMethodOptions}
+                        value={paymentMethodOptions.find((opt) => opt.value === field.value) || null}
+                        onChange={(option) => field.onChange(option?.value || null)}
+                        placeholder="Select payment method"
+                        isDisabled={isLoading}
+                        isClearable
+                        isSearchable
+                        styles={{
+                          control: (base) => ({ ...base, minHeight: "44px" }),
+                          menu: (base) => ({ ...base, zIndex: 9999 }),
+                        }}
+                      />
+                      <FormMessage />
+                    </FormItem>
+                  );
+                }}
               />
 
               {/* Status */}
               <FormField
                 control={form.control}
                 name="status"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Status</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      value={field.value || undefined}
-                      disabled={isLoading || expense.status === "PAID" || expense.status === "CANCELLED"}
-                    >
-                      <FormControl>
-                        <SelectTrigger className="h-11">
-                          <SelectValue placeholder="Select status" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent className="bg-white">
-                        <SelectItem value="DRAFT">Draft</SelectItem>
-                        <SelectItem value="PENDING">Pending Approval</SelectItem>
-                        <SelectItem value="APPROVED">Approved</SelectItem>
-                        <SelectItem value="PAID">Paid</SelectItem>
-                        <SelectItem value="REJECTED">Rejected</SelectItem>
-                        <SelectItem value="CANCELLED">Cancelled</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
+                render={({ field }) => {
+                  const statusOptions: SelectOption[] = [
+                    { value: "DRAFT", label: "Draft" },
+                    { value: "PENDING", label: "Pending Approval" },
+                    { value: "APPROVED", label: "Approved" },
+                    { value: "PAID", label: "Paid" },
+                    { value: "REJECTED", label: "Rejected" },
+                    { value: "CANCELLED", label: "Cancelled" },
+                  ];
+                  return (
+                    <FormItem>
+                      <FormLabel>Status</FormLabel>
+                      <Select<SelectOption>
+                        instanceId="edit-expense-status-select"
+                        options={statusOptions}
+                        value={statusOptions.find((opt) => opt.value === field.value) || null}
+                        onChange={(option) => field.onChange(option?.value || null)}
+                        placeholder="Select status"
+                        isDisabled={isLoading || expense.status === "PAID" || expense.status === "CANCELLED"}
+                        isClearable={false}
+                        isSearchable
+                        styles={{
+                          control: (base) => ({ ...base, minHeight: "44px" }),
+                          menu: (base) => ({ ...base, zIndex: 9999 }),
+                        }}
+                      />
+                      <FormMessage />
+                    </FormItem>
+                  );
+                }}
               />
             </div>
 

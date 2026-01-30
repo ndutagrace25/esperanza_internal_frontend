@@ -17,19 +17,17 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Form,
-  FormControl,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import Select from "react-select";
+
+interface SelectOption {
+  value: string;
+  label: string;
+}
 import { Loader2, Plus, Trash2 } from "lucide-react";
 import { useClients } from "@/lib/hooks/useClients";
 import { useEmployees } from "@/lib/hooks/useEmployees";
@@ -88,15 +86,15 @@ export function EditJobCardDialog({
   type TaskItem =
     | JobTask
     | (Omit<JobTask, "id" | "jobCardId" | "createdAt" | "updatedAt"> & {
-        tempId: string;
-        isNew: true;
-      });
+      tempId: string;
+      isNew: true;
+    });
   type ExpenseItem =
     | JobExpense
     | (Omit<JobExpense, "id" | "jobCardId" | "createdAt" | "updatedAt"> & {
-        tempId: string;
-        isNew: true;
-      });
+      tempId: string;
+      isNew: true;
+    });
 
   const [tasks, setTasks] = useState<TaskItem[]>([]);
   const [expenses, setExpenses] = useState<ExpenseItem[]>([]);
@@ -258,8 +256,8 @@ export function EditJobCardDialog({
           "isNew" in task && task.isNew
             ? task.tempId
             : "id" in task
-            ? task.id
-            : "";
+              ? task.id
+              : "";
         if (id === taskIdOrTempId) {
           return { ...task, [field]: value };
         }
@@ -316,8 +314,8 @@ export function EditJobCardDialog({
           "isNew" in expense && expense.isNew
             ? expense.tempId
             : "id" in expense
-            ? expense.id
-            : "";
+              ? expense.id
+              : "";
         if (id === expenseIdOrTempId) {
           return { ...expense, [field]: value };
         }
@@ -367,30 +365,33 @@ export function EditJobCardDialog({
               control={form.control}
               name="clientId"
               rules={{ required: "Client is required" }}
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Client *</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    value={field.value}
-                    disabled={isLoading || clientsLoading}
-                  >
-                    <FormControl>
-                      <SelectTrigger className="h-11">
-                        <SelectValue placeholder="Select client" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent className="bg-white">
-                      {clients.map((client) => (
-                        <SelectItem key={client.id} value={client.id}>
-                          {client.companyName}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
+              render={({ field }) => {
+                const clientOptions: SelectOption[] = clients.map((client) => ({
+                  value: client.id,
+                  label: client.companyName,
+                }));
+                return (
+                  <FormItem>
+                    <FormLabel>Client *</FormLabel>
+                    <Select<SelectOption>
+                      instanceId="edit-jobcard-client-select"
+                      options={clientOptions}
+                      value={clientOptions.find((opt) => opt.value === field.value) || null}
+                      onChange={(option) => field.onChange(option?.value || null)}
+                      placeholder="Select client"
+                      isDisabled={isLoading || clientsLoading}
+                      isLoading={clientsLoading}
+                      isClearable={false}
+                      isSearchable
+                      styles={{
+                        control: (base) => ({ ...base, minHeight: "44px" }),
+                        menu: (base) => ({ ...base, zIndex: 9999 }),
+                      }}
+                    />
+                    <FormMessage />
+                  </FormItem>
+                );
+              }}
             />
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -419,31 +420,34 @@ export function EditJobCardDialog({
               <FormField
                 control={form.control}
                 name="status"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Status</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      value={field.value}
-                      disabled={isLoading}
-                    >
-                      <FormControl>
-                        <SelectTrigger className="h-11">
-                          <SelectValue placeholder="Select status" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent className="bg-white">
-                        <SelectItem value="DRAFT">Draft</SelectItem>
-                        <SelectItem value="PENDING_CLIENT_CONFIRMATION">
-                          Pending Confirmation
-                        </SelectItem>
-                        <SelectItem value="COMPLETED">Completed</SelectItem>
-                        <SelectItem value="CANCELLED">Cancelled</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
+                render={({ field }) => {
+                  const statusOptions: SelectOption[] = [
+                    { value: "DRAFT", label: "Draft" },
+                    { value: "PENDING_CLIENT_CONFIRMATION", label: "Pending Confirmation" },
+                    { value: "COMPLETED", label: "Completed" },
+                    { value: "CANCELLED", label: "Cancelled" },
+                  ];
+                  return (
+                    <FormItem>
+                      <FormLabel>Status</FormLabel>
+                      <Select<SelectOption>
+                        instanceId="edit-jobcard-status-select"
+                        options={statusOptions}
+                        value={statusOptions.find((opt) => opt.value === field.value) || null}
+                        onChange={(option) => field.onChange(option?.value || null)}
+                        placeholder="Select status"
+                        isDisabled={isLoading}
+                        isClearable={false}
+                        isSearchable
+                        styles={{
+                          control: (base) => ({ ...base, minHeight: "44px" }),
+                          menu: (base) => ({ ...base, zIndex: 9999 }),
+                        }}
+                      />
+                      <FormMessage />
+                    </FormItem>
+                  );
+                }}
               />
             </div>
 
@@ -517,30 +521,33 @@ export function EditJobCardDialog({
               control={form.control}
               name="supportStaffId"
               rules={{ required: "Support staff is required" }}
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Support Staff *</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    value={field.value || undefined}
-                    disabled={isLoading || employeesLoading}
-                  >
-                    <FormControl>
-                      <SelectTrigger className="h-11">
-                        <SelectValue placeholder="Select staff" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent className="bg-white">
-                      {employees.map((employee) => (
-                        <SelectItem key={employee.id} value={employee.id}>
-                          {employee.firstName} {employee.lastName}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage className="text-red-500" />
-                </FormItem>
-              )}
+              render={({ field }) => {
+                const employeeOptions: SelectOption[] = employees.map((emp) => ({
+                  value: emp.id,
+                  label: `${emp.firstName} ${emp.lastName}`,
+                }));
+                return (
+                  <FormItem>
+                    <FormLabel>Support Staff *</FormLabel>
+                    <Select<SelectOption>
+                      instanceId="edit-jobcard-staff-select"
+                      options={employeeOptions}
+                      value={employeeOptions.find((opt) => opt.value === field.value) || null}
+                      onChange={(option) => field.onChange(option?.value || null)}
+                      placeholder="Select staff"
+                      isDisabled={isLoading || employeesLoading}
+                      isLoading={employeesLoading}
+                      isClearable={false}
+                      isSearchable
+                      styles={{
+                        control: (base) => ({ ...base, minHeight: "44px" }),
+                        menu: (base) => ({ ...base, zIndex: 9999 }),
+                      }}
+                    />
+                    <FormMessage className="text-red-500" />
+                  </FormItem>
+                );
+              }}
             />
 
             <Separator className="my-6" />
@@ -579,8 +586,8 @@ export function EditJobCardDialog({
                       "isNew" in task && task.isNew
                         ? task.tempId
                         : "id" in task
-                        ? task.id
-                        : "";
+                          ? task.id
+                          : "";
                     return (
                       <div
                         key={taskId}
@@ -682,8 +689,8 @@ export function EditJobCardDialog({
                       "isNew" in expense && expense.isNew
                         ? expense.tempId
                         : "id" in expense
-                        ? expense.id
-                        : "";
+                          ? expense.id
+                          : "";
                     return (
                       <div
                         key={expenseId}
@@ -709,29 +716,34 @@ export function EditJobCardDialog({
                             <label className="text-sm font-medium mb-1 block">
                               Category *
                             </label>
-                            <Select
-                              value={expense.category}
-                              onValueChange={(value) =>
-                                updateExpenseField(expenseId, "category", value)
+                            <Select<SelectOption>
+                              instanceId={`edit-expense-category-${expenseId}`}
+                              options={expenseCategories
+                                .filter((cat) => cat.status === "active")
+                                .map((category) => ({
+                                  value: category.name,
+                                  label: category.name,
+                                }))}
+                              value={expenseCategories
+                                .filter((cat) => cat.status === "active")
+                                .map((category) => ({
+                                  value: category.name,
+                                  label: category.name,
+                                }))
+                                .find((opt) => opt.value === expense.category) || null}
+                              onChange={(option) =>
+                                updateExpenseField(expenseId, "category", option?.value || "")
                               }
-                              disabled={isLoading || categoriesLoading}
-                            >
-                              <SelectTrigger className="h-9">
-                                <SelectValue placeholder="Select category" />
-                              </SelectTrigger>
-                              <SelectContent className="bg-white">
-                                {expenseCategories
-                                  .filter((cat) => cat.status === "active")
-                                  .map((category) => (
-                                    <SelectItem
-                                      key={category.id}
-                                      value={category.name}
-                                    >
-                                      {category.name}
-                                    </SelectItem>
-                                  ))}
-                              </SelectContent>
-                            </Select>
+                              placeholder="Select category"
+                              isDisabled={isLoading || categoriesLoading}
+                              isLoading={categoriesLoading}
+                              isClearable={false}
+                              isSearchable
+                              styles={{
+                                control: (base) => ({ ...base, minHeight: "36px" }),
+                                menu: (base) => ({ ...base, zIndex: 9999 }),
+                              }}
+                            />
                           </div>
                           <div>
                             <label className="text-sm font-medium mb-1 block">

@@ -16,23 +16,21 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   Form,
-  FormControl,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import Select from "react-select";
 import { Loader2 } from "lucide-react";
 import { useRoles } from "@/lib/hooks/useRoles";
 import type { CreateEmployeeData } from "@/lib/services/employeeService";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+
+interface SelectOption {
+  value: string;
+  label: string;
+}
 
 interface CreateEmployeeDialogProps {
   open: boolean;
@@ -48,6 +46,7 @@ export function CreateEmployeeDialog({
   const dispatch = useAppDispatch();
   const { roles, isLoading: rolesLoading, error: rolesError } = useRoles();
   const [isLoading, setIsLoading] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const form = useForm<CreateEmployeeData>({
     defaultValues: {
@@ -63,6 +62,7 @@ export function CreateEmployeeDialog({
 
   const onSubmit = async (data: CreateEmployeeData) => {
     setIsLoading(true);
+    setSubmitError(null);
     try {
       // Clean up empty strings to null (to match API expectations)
       const cleanedData: CreateEmployeeData = {
@@ -79,15 +79,29 @@ export function CreateEmployeeDialog({
       await dispatch(createEmployee(cleanedData)).unwrap();
       form.reset();
       onSuccess();
-    } catch {
-      // Error is handled by Redux state
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : (typeof error === 'string' ? error : 'Failed to create employee');
+      setSubmitError(errorMessage);
     } finally {
       setIsLoading(false);
     }
   };
 
+  const roleOptions: SelectOption[] = roles.map((role) => ({
+    value: role.id,
+    label: role.name,
+  }));
+
+  const handleOpenChange = (isOpen: boolean) => {
+    if (!isOpen) {
+      setSubmitError(null);
+      form.reset();
+    }
+    onOpenChange(isOpen);
+  };
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-white">
         <DialogHeader>
           <DialogTitle>Create New Employee</DialogTitle>
@@ -96,10 +110,10 @@ export function CreateEmployeeDialog({
             generated and sent via email.
           </DialogDescription>
         </DialogHeader>
-        {rolesError && (
-          <Alert variant="destructive" className="mx-6">
+        {(rolesError || submitError) && (
+          <Alert variant="destructive">
             <AlertDescription className="font-medium text-red-500">
-              {rolesError}
+              {submitError || rolesError}
             </AlertDescription>
           </Alert>
         )}
@@ -113,13 +127,11 @@ export function CreateEmployeeDialog({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>First Name</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="John"
-                        disabled={isLoading}
-                        {...field}
-                      />
-                    </FormControl>
+                    <Input
+                      placeholder="John"
+                      disabled={isLoading}
+                      {...field}
+                    />
                     <FormMessage />
                   </FormItem>
                 )}
@@ -132,13 +144,11 @@ export function CreateEmployeeDialog({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Last Name</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="Doe"
-                        disabled={isLoading}
-                        {...field}
-                      />
-                    </FormControl>
+                    <Input
+                      placeholder="Doe"
+                      disabled={isLoading}
+                      {...field}
+                    />
                     <FormMessage />
                   </FormItem>
                 )}
@@ -157,14 +167,12 @@ export function CreateEmployeeDialog({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Email</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="email"
-                        placeholder="john.doe@example.com"
-                        disabled={isLoading}
-                        {...field}
-                      />
-                    </FormControl>
+                    <Input
+                      type="email"
+                      placeholder="john.doe@example.com"
+                      disabled={isLoading}
+                      {...field}
+                    />
                     <FormMessage />
                   </FormItem>
                 )}
@@ -176,15 +184,13 @@ export function CreateEmployeeDialog({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Phone (Optional)</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="tel"
-                        placeholder="+1234567890"
-                        disabled={isLoading}
-                        {...field}
-                        value={field.value ?? ""}
-                      />
-                    </FormControl>
+                    <Input
+                      type="tel"
+                      placeholder="+1234567890"
+                      disabled={isLoading}
+                      {...field}
+                      value={field.value ?? ""}
+                    />
                     <FormMessage />
                   </FormItem>
                 )}
@@ -196,14 +202,12 @@ export function CreateEmployeeDialog({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Position (Optional)</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="Software Engineer"
-                        disabled={isLoading}
-                        {...field}
-                        value={field.value ?? ""}
-                      />
-                    </FormControl>
+                    <Input
+                      placeholder="Software Engineer"
+                      disabled={isLoading}
+                      {...field}
+                      value={field.value ?? ""}
+                    />
                     <FormMessage />
                   </FormItem>
                 )}
@@ -215,14 +219,12 @@ export function CreateEmployeeDialog({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Department (Optional)</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="Engineering"
-                        disabled={isLoading}
-                        {...field}
-                        value={field.value ?? ""}
-                      />
-                    </FormControl>
+                    <Input
+                      placeholder="Engineering"
+                      disabled={isLoading}
+                      {...field}
+                      value={field.value ?? ""}
+                    />
                     <FormMessage />
                   </FormItem>
                 )}
@@ -235,26 +237,21 @@ export function CreateEmployeeDialog({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Role</FormLabel>
-                    <Select
-                      onValueChange={(value) => {
-                        field.onChange(value);
+                    <Select<SelectOption>
+                      instanceId="role-select"
+                      options={roleOptions}
+                      value={roleOptions.find((opt) => opt.value === field.value) || null}
+                      onChange={(option) => field.onChange(option?.value || null)}
+                      placeholder="Select a role"
+                      isDisabled={isLoading || rolesLoading}
+                      isLoading={rolesLoading}
+                      isClearable={false}
+                      isSearchable
+                      styles={{
+                        control: (base) => ({ ...base, minHeight: "44px" }),
+                        menu: (base) => ({ ...base, zIndex: 9999 }),
                       }}
-                      value={field.value ?? undefined}
-                      disabled={isLoading || rolesLoading}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select a role" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {roles.map((role) => (
-                          <SelectItem key={role.id} value={role.id}>
-                            {role.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    />
                     <FormMessage />
                   </FormItem>
                 )}
@@ -265,7 +262,7 @@ export function CreateEmployeeDialog({
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => onOpenChange(false)}
+                onClick={() => handleOpenChange(false)}
                 disabled={isLoading}
               >
                 Cancel

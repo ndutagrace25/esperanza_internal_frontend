@@ -16,24 +16,22 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   Form,
-  FormControl,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import Select from "react-select";
 import { Loader2 } from "lucide-react";
 import { useRoles } from "@/lib/hooks/useRoles";
 import type { EmployeeWithoutPassword } from "@/lib/types";
 import type { UpdateEmployeeData } from "@/lib/services/employeeService";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+
+interface SelectOption {
+  value: string;
+  label: string;
+}
 
 interface EditEmployeeDialogProps {
   open: boolean;
@@ -109,6 +107,11 @@ export function EditEmployeeDialog({
     }
   };
 
+  const roleOptions: SelectOption[] = roles.map((role) => ({
+    value: role.id,
+    label: role.name,
+  }));
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-white">
@@ -135,13 +138,11 @@ export function EditEmployeeDialog({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>First Name</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="John"
-                        disabled={isLoading}
-                        {...field}
-                      />
-                    </FormControl>
+                    <Input
+                      placeholder="John"
+                      disabled={isLoading}
+                      {...field}
+                    />
                     <FormMessage />
                   </FormItem>
                 )}
@@ -154,13 +155,11 @@ export function EditEmployeeDialog({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Last Name</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="Doe"
-                        disabled={isLoading}
-                        {...field}
-                      />
-                    </FormControl>
+                    <Input
+                      placeholder="Doe"
+                      disabled={isLoading}
+                      {...field}
+                    />
                     <FormMessage />
                   </FormItem>
                 )}
@@ -179,14 +178,12 @@ export function EditEmployeeDialog({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Email</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="email"
-                        placeholder="john.doe@example.com"
-                        disabled={isLoading}
-                        {...field}
-                      />
-                    </FormControl>
+                    <Input
+                      type="email"
+                      placeholder="john.doe@example.com"
+                      disabled={isLoading}
+                      {...field}
+                    />
                     <FormMessage />
                   </FormItem>
                 )}
@@ -198,15 +195,13 @@ export function EditEmployeeDialog({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Phone (Optional)</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="tel"
-                        placeholder="+1234567890"
-                        disabled={isLoading}
-                        {...field}
-                        value={field.value ?? ""}
-                      />
-                    </FormControl>
+                    <Input
+                      type="tel"
+                      placeholder="+1234567890"
+                      disabled={isLoading}
+                      {...field}
+                      value={field.value ?? ""}
+                    />
                     <FormMessage />
                   </FormItem>
                 )}
@@ -218,14 +213,12 @@ export function EditEmployeeDialog({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Position (Optional)</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="Software Engineer"
-                        disabled={isLoading}
-                        {...field}
-                        value={field.value ?? ""}
-                      />
-                    </FormControl>
+                    <Input
+                      placeholder="Software Engineer"
+                      disabled={isLoading}
+                      {...field}
+                      value={field.value ?? ""}
+                    />
                     <FormMessage />
                   </FormItem>
                 )}
@@ -237,14 +230,12 @@ export function EditEmployeeDialog({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Department (Optional)</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="Engineering"
-                        disabled={isLoading}
-                        {...field}
-                        value={field.value ?? ""}
-                      />
-                    </FormControl>
+                    <Input
+                      placeholder="Engineering"
+                      disabled={isLoading}
+                      {...field}
+                      value={field.value ?? ""}
+                    />
                     <FormMessage />
                   </FormItem>
                 )}
@@ -256,26 +247,21 @@ export function EditEmployeeDialog({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Role (Optional)</FormLabel>
-                    <Select
-                      onValueChange={(value) => {
-                        field.onChange(value);
+                    <Select<SelectOption>
+                      instanceId="edit-role-select"
+                      options={roleOptions}
+                      value={roleOptions.find((opt) => opt.value === field.value) || null}
+                      onChange={(option) => field.onChange(option?.value || null)}
+                      placeholder="Select a role (optional)"
+                      isDisabled={isLoading || rolesLoading}
+                      isLoading={rolesLoading}
+                      isClearable
+                      isSearchable
+                      styles={{
+                        control: (base) => ({ ...base, minHeight: "44px" }),
+                        menu: (base) => ({ ...base, zIndex: 9999 }),
                       }}
-                      value={field.value ?? undefined}
-                      disabled={isLoading || rolesLoading}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select a role (optional)" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {roles.map((role) => (
-                          <SelectItem key={role.id} value={role.id}>
-                            {role.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    />
                     <FormMessage />
                   </FormItem>
                 )}

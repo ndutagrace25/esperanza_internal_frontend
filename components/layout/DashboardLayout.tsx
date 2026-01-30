@@ -10,6 +10,7 @@ import {
   Briefcase,
   DollarSign,
   FileText,
+  FolderTree,
   LogOut,
   Menu,
   Package,
@@ -26,6 +27,7 @@ const allMenuItems = [
   { name: "Employees", icon: Users, href: "/employees" },
   { name: "Clients", icon: Briefcase, href: "/clients" },
   { name: "Client Integrations", icon: Plug, href: "/client-integrations" },
+  { name: "Product Categories", icon: FolderTree, href: "/product-categories" },
   { name: "Products", icon: Package, href: "/products" },
   { name: "Job Cards", icon: FileText, href: "/job-cards" },
   { name: "Sales", icon: ShoppingCart, href: "/sales" },
@@ -37,6 +39,7 @@ const allMenuItems = [
 const staffMenuItems = [
   { name: "Employees", icon: Users, href: "/employees" },
   { name: "Clients", icon: Briefcase, href: "/clients" },
+  { name: "Product Categories", icon: FolderTree, href: "/product-categories" },
   { name: "Products", icon: Package, href: "/products" },
   { name: "Job Cards", icon: FileText, href: "/job-cards" },
 ];

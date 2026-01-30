@@ -17,24 +17,22 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Form,
-  FormControl,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import Select from "react-select";
 import { Loader2 } from "lucide-react";
 import { useEmployees } from "@/lib/hooks/useEmployees";
 import type { Client } from "@/lib/types";
 import type { UpdateClientData } from "@/lib/services/clientService";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+
+interface SelectOption {
+  value: string;
+  label: string;
+}
 
 interface EditClientDialogProps {
   open: boolean;
@@ -79,7 +77,6 @@ export function EditClientDialog({
     },
   });
 
-  // Update form when client changes
   useEffect(() => {
     if (client) {
       form.reset({
@@ -106,7 +103,6 @@ export function EditClientDialog({
   const onSubmit = async (data: UpdateClientData) => {
     setIsLoading(true);
     try {
-      // Clean up empty strings to null
       const cleanedData: UpdateClientData = {
         ...data,
         contactPerson:
@@ -153,6 +149,17 @@ export function EditClientDialog({
     }
   };
 
+  const statusOptions: SelectOption[] = [
+    { value: "active", label: "Active" },
+    { value: "inactive", label: "Inactive" },
+    { value: "archived", label: "Archived" },
+  ];
+
+  const employeeOptions: SelectOption[] = employees.map((emp) => ({
+    value: emp.id,
+    label: `${emp.firstName} ${emp.lastName}`,
+  }));
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto bg-white">
@@ -171,7 +178,6 @@ export function EditClientDialog({
         )}
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            {/* Company Name - Required */}
             <FormField
               control={form.control}
               name="companyName"
@@ -179,42 +185,36 @@ export function EditClientDialog({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Company Name *</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="Acme Corporation"
-                      disabled={isLoading}
-                      className="h-11"
-                      {...field}
-                    />
-                  </FormControl>
+                  <Input
+                    placeholder="Acme Corporation"
+                    disabled={isLoading}
+                    className="h-11"
+                    {...field}
+                  />
                   <FormMessage />
                 </FormItem>
               )}
             />
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Contact Person */}
               <FormField
                 control={form.control}
                 name="contactPerson"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Contact Person</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="John Doe"
-                        disabled={isLoading}
-                        className="h-11"
-                        {...field}
-                        value={field.value ?? ""}
-                      />
-                    </FormControl>
+                    <Input
+                      placeholder="John Doe"
+                      disabled={isLoading}
+                      className="h-11"
+                      {...field}
+                      value={field.value ?? ""}
+                    />
                     <FormMessage />
                   </FormItem>
                 )}
               />
 
-              {/* Email */}
               <FormField
                 control={form.control}
                 name="email"
@@ -227,16 +227,14 @@ export function EditClientDialog({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Email</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="email"
-                        placeholder="contact@company.com"
-                        disabled={isLoading}
-                        className="h-11"
-                        {...field}
-                        value={field.value ?? ""}
-                      />
-                    </FormControl>
+                    <Input
+                      type="email"
+                      placeholder="contact@company.com"
+                      disabled={isLoading}
+                      className="h-11"
+                      {...field}
+                      value={field.value ?? ""}
+                    />
                     <FormMessage />
                   </FormItem>
                 )}
@@ -244,110 +242,95 @@ export function EditClientDialog({
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Phone */}
               <FormField
                 control={form.control}
                 name="phone"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Phone</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="tel"
-                        placeholder="+1234567890"
-                        disabled={isLoading}
-                        className="h-11"
-                        {...field}
-                        value={field.value ?? ""}
-                      />
-                    </FormControl>
+                    <Input
+                      type="tel"
+                      placeholder="+1234567890"
+                      disabled={isLoading}
+                      className="h-11"
+                      {...field}
+                      value={field.value ?? ""}
+                    />
                     <FormMessage />
                   </FormItem>
                 )}
               />
 
-              {/* Alternate Phone */}
               <FormField
                 control={form.control}
                 name="alternatePhone"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Alternate Phone</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="tel"
-                        placeholder="+1234567890"
-                        disabled={isLoading}
-                        className="h-11"
-                        {...field}
-                        value={field.value ?? ""}
-                      />
-                    </FormControl>
+                    <Input
+                      type="tel"
+                      placeholder="+1234567890"
+                      disabled={isLoading}
+                      className="h-11"
+                      {...field}
+                      value={field.value ?? ""}
+                    />
                     <FormMessage />
                   </FormItem>
                 )}
               />
             </div>
 
-            {/* Address */}
             <FormField
               control={form.control}
               name="address"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Address</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="123 Main Street"
-                      disabled={isLoading}
-                      className="h-11"
-                      {...field}
-                      value={field.value ?? ""}
-                    />
-                  </FormControl>
+                  <Input
+                    placeholder="123 Main Street"
+                    disabled={isLoading}
+                    className="h-11"
+                    {...field}
+                    value={field.value ?? ""}
+                  />
                   <FormMessage />
                 </FormItem>
               )}
             />
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* City */}
               <FormField
                 control={form.control}
                 name="city"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>City</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="New York"
-                        disabled={isLoading}
-                        className="h-11"
-                        {...field}
-                        value={field.value ?? ""}
-                      />
-                    </FormControl>
+                    <Input
+                      placeholder="New York"
+                      disabled={isLoading}
+                      className="h-11"
+                      {...field}
+                      value={field.value ?? ""}
+                    />
                     <FormMessage />
                   </FormItem>
                 )}
               />
 
-              {/* State */}
               <FormField
                 control={form.control}
                 name="state"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>State/Province</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="NY"
-                        disabled={isLoading}
-                        className="h-11"
-                        {...field}
-                        value={field.value ?? ""}
-                      />
-                    </FormControl>
+                    <Input
+                      placeholder="NY"
+                      disabled={isLoading}
+                      className="h-11"
+                      {...field}
+                      value={field.value ?? ""}
+                    />
                     <FormMessage />
                   </FormItem>
                 )}
@@ -355,43 +338,37 @@ export function EditClientDialog({
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Country */}
               <FormField
                 control={form.control}
                 name="country"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Country</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="United States"
-                        disabled={isLoading}
-                        className="h-11"
-                        {...field}
-                        value={field.value ?? ""}
-                      />
-                    </FormControl>
+                    <Input
+                      placeholder="United States"
+                      disabled={isLoading}
+                      className="h-11"
+                      {...field}
+                      value={field.value ?? ""}
+                    />
                     <FormMessage />
                   </FormItem>
                 )}
               />
 
-              {/* Postal Code */}
               <FormField
                 control={form.control}
                 name="postalCode"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Postal Code</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="10001"
-                        disabled={isLoading}
-                        className="h-11"
-                        {...field}
-                        value={field.value ?? ""}
-                      />
-                    </FormControl>
+                    <Input
+                      placeholder="10001"
+                      disabled={isLoading}
+                      className="h-11"
+                      {...field}
+                      value={field.value ?? ""}
+                    />
                     <FormMessage />
                   </FormItem>
                 )}
@@ -399,44 +376,38 @@ export function EditClientDialog({
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Website */}
               <FormField
                 control={form.control}
                 name="website"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Website</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="url"
-                        placeholder="https://www.company.com"
-                        disabled={isLoading}
-                        className="h-11"
-                        {...field}
-                        value={field.value ?? ""}
-                      />
-                    </FormControl>
+                    <Input
+                      type="url"
+                      placeholder="https://www.company.com"
+                      disabled={isLoading}
+                      className="h-11"
+                      {...field}
+                      value={field.value ?? ""}
+                    />
                     <FormMessage />
                   </FormItem>
                 )}
               />
 
-              {/* Tax ID */}
               <FormField
                 control={form.control}
                 name="taxId"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Tax ID / VAT Number</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="TAX-123456"
-                        disabled={isLoading}
-                        className="h-11"
-                        {...field}
-                        value={field.value ?? ""}
-                      />
-                    </FormControl>
+                    <Input
+                      placeholder="TAX-123456"
+                      disabled={isLoading}
+                      className="h-11"
+                      {...field}
+                      value={field.value ?? ""}
+                    />
                     <FormMessage />
                   </FormItem>
                 )}
@@ -444,115 +415,97 @@ export function EditClientDialog({
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Status */}
               <FormField
                 control={form.control}
                 name="status"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Status</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      value={field.value}
-                      disabled={isLoading}
-                    >
-                      <FormControl>
-                        <SelectTrigger className="h-11">
-                          <SelectValue placeholder="Select status" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="active">Active</SelectItem>
-                        <SelectItem value="inactive">Inactive</SelectItem>
-                        <SelectItem value="archived">Archived</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <Select<SelectOption>
+                      instanceId="edit-client-status-select"
+                      options={statusOptions}
+                      value={statusOptions.find((opt) => opt.value === field.value) || null}
+                      onChange={(option) => field.onChange(option?.value || null)}
+                      placeholder="Select status"
+                      isDisabled={isLoading}
+                      isClearable={false}
+                      isSearchable
+                      styles={{
+                        control: (base) => ({ ...base, minHeight: "44px" }),
+                        menu: (base) => ({ ...base, zIndex: 9999 }),
+                      }}
+                    />
                     <FormMessage />
                   </FormItem>
                 )}
               />
 
-              {/* Assigned To */}
               <FormField
                 control={form.control}
                 name="assignedToId"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Assigned To</FormLabel>
-                    <Select
-                      onValueChange={(value) => {
-                        field.onChange(value || null);
+                    <Select<SelectOption>
+                      instanceId="edit-client-assigned-select"
+                      options={employeeOptions}
+                      value={employeeOptions.find((opt) => opt.value === field.value) || null}
+                      onChange={(option) => field.onChange(option?.value || null)}
+                      placeholder="Select employee (optional)"
+                      isDisabled={isLoading || employeesLoading}
+                      isLoading={employeesLoading}
+                      isClearable
+                      isSearchable
+                      styles={{
+                        control: (base) => ({ ...base, minHeight: "44px" }),
+                        menu: (base) => ({ ...base, zIndex: 9999 }),
                       }}
-                      value={field.value || undefined}
-                      disabled={isLoading || employeesLoading}
-                    >
-                      <FormControl>
-                        <SelectTrigger className="h-11">
-                          <SelectValue placeholder="Select employee (optional)" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {employees.map((employee) => (
-                          <SelectItem key={employee.id} value={employee.id}>
-                            {employee.firstName} {employee.lastName}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    />
                     <FormMessage />
                   </FormItem>
                 )}
               />
             </div>
 
-            {/* Brought In By */}
             <FormField
               control={form.control}
               name="broughtInById"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Brought In By</FormLabel>
-                  <Select
-                    onValueChange={(value) => {
-                      field.onChange(value || null);
+                  <Select<SelectOption>
+                    instanceId="edit-client-broughtin-select"
+                    options={employeeOptions}
+                    value={employeeOptions.find((opt) => opt.value === field.value) || null}
+                    onChange={(option) => field.onChange(option?.value || null)}
+                    placeholder="Select employee (optional)"
+                    isDisabled={isLoading || employeesLoading}
+                    isLoading={employeesLoading}
+                    isClearable
+                    isSearchable
+                    styles={{
+                      control: (base) => ({ ...base, minHeight: "44px" }),
+                      menu: (base) => ({ ...base, zIndex: 9999 }),
                     }}
-                    value={field.value || undefined}
-                    disabled={isLoading || employeesLoading}
-                  >
-                    <FormControl>
-                      <SelectTrigger className="h-11">
-                        <SelectValue placeholder="Select employee (optional)" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {employees.map((employee) => (
-                        <SelectItem key={employee.id} value={employee.id}>
-                          {employee.firstName} {employee.lastName}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  />
                   <FormMessage />
                 </FormItem>
               )}
             />
 
-            {/* Notes */}
             <FormField
               control={form.control}
               name="notes"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Notes</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder="Additional notes about the client..."
-                      disabled={isLoading}
-                      rows={3}
-                      {...field}
-                      value={field.value ?? ""}
-                    />
-                  </FormControl>
+                  <Textarea
+                    placeholder="Additional notes about the client..."
+                    disabled={isLoading}
+                    rows={3}
+                    {...field}
+                    value={field.value ?? ""}
+                  />
                   <FormMessage />
                 </FormItem>
               )}

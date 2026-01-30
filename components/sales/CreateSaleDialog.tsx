@@ -23,13 +23,12 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import Select from "react-select";
+
+interface SelectOption {
+  value: string;
+  label: string;
+}
 import { Loader2, Plus, Trash2 } from "lucide-react";
 import { useClients } from "@/lib/hooks/useClients";
 import { useProducts } from "@/lib/hooks/useProducts";
@@ -143,7 +142,7 @@ export function CreateSaleDialog({
         saleDate: new Date(data.saleDate).toISOString(),
         agreedMonthlyInstallmentAmount:
           data.agreedMonthlyInstallmentAmount != null &&
-          String(data.agreedMonthlyInstallmentAmount).trim() !== ""
+            String(data.agreedMonthlyInstallmentAmount).trim() !== ""
             ? String(data.agreedMonthlyInstallmentAmount)
             : undefined,
         notes: data.notes && data.notes.trim() !== "" ? data.notes : null,
@@ -166,11 +165,11 @@ export function CreateSaleDialog({
       const firstInstallment =
         firstAmount > 0
           ? {
-              amount: firstAmount,
-              paidAt: firstInstallmentDate || new Date().toISOString(),
-              notes:
-                firstInstallmentNotes.trim() || undefined,
-            }
+            amount: firstAmount,
+            paidAt: firstInstallmentDate || new Date().toISOString(),
+            notes:
+              firstInstallmentNotes.trim() || undefined,
+          }
           : undefined;
 
       await dispatch(
@@ -285,30 +284,33 @@ export function CreateSaleDialog({
               control={form.control}
               name="clientId"
               rules={{ required: "Client is required" }}
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Client *</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    value={field.value}
-                    disabled={isLoading || clientsLoading}
-                  >
-                    <FormControl>
-                      <SelectTrigger className="h-11">
-                        <SelectValue placeholder="Select client" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent className="bg-white">
-                      {clients.map((client) => (
-                        <SelectItem key={client.id} value={client.id}>
-                          {client.companyName}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage className="text-red-500" />
-                </FormItem>
-              )}
+              render={({ field }) => {
+                const clientOptions: SelectOption[] = clients.map((client) => ({
+                  value: client.id,
+                  label: client.companyName,
+                }));
+                return (
+                  <FormItem>
+                    <FormLabel>Client *</FormLabel>
+                    <Select<SelectOption>
+                      instanceId="sale-client-select"
+                      options={clientOptions}
+                      value={clientOptions.find((opt) => opt.value === field.value) || null}
+                      onChange={(option) => field.onChange(option?.value || null)}
+                      placeholder="Select client"
+                      isDisabled={isLoading || clientsLoading}
+                      isLoading={clientsLoading}
+                      isClearable={false}
+                      isSearchable
+                      styles={{
+                        control: (base) => ({ ...base, minHeight: "44px" }),
+                        menu: (base) => ({ ...base, zIndex: 9999 }),
+                      }}
+                    />
+                    <FormMessage className="text-red-500" />
+                  </FormItem>
+                );
+              }}
             />
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -337,28 +339,33 @@ export function CreateSaleDialog({
               <FormField
                 control={form.control}
                 name="status"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Status</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      value={field.value}
-                      disabled={isLoading}
-                    >
-                      <FormControl>
-                        <SelectTrigger className="h-11">
-                          <SelectValue placeholder="Select status" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent className="bg-white">
-                        <SelectItem value="DRAFT">Draft</SelectItem>
-                        <SelectItem value="PENDING">Pending</SelectItem>
-                        <SelectItem value="COMPLETED">Completed</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage className="text-red-500" />
-                  </FormItem>
-                )}
+                render={({ field }) => {
+                  const statusOptions: SelectOption[] = [
+                    { value: "DRAFT", label: "Draft" },
+                    { value: "PENDING", label: "Pending" },
+                    { value: "COMPLETED", label: "Completed" },
+                  ];
+                  return (
+                    <FormItem>
+                      <FormLabel>Status</FormLabel>
+                      <Select<SelectOption>
+                        instanceId="sale-status-select"
+                        options={statusOptions}
+                        value={statusOptions.find((opt) => opt.value === field.value) || null}
+                        onChange={(option) => field.onChange(option?.value || null)}
+                        placeholder="Select status"
+                        isDisabled={isLoading}
+                        isClearable={false}
+                        isSearchable
+                        styles={{
+                          control: (base) => ({ ...base, minHeight: "44px" }),
+                          menu: (base) => ({ ...base, zIndex: 9999 }),
+                        }}
+                      />
+                      <FormMessage className="text-red-500" />
+                    </FormItem>
+                  );
+                }}
               />
 
               {/* Agreed monthly installment (optional) */}
@@ -452,27 +459,29 @@ export function CreateSaleDialog({
                             <label className="text-sm font-medium mb-1 block">
                               Product *
                             </label>
-                            <Select
-                              value={item.productId}
-                              onValueChange={(value) =>
-                                updateItem(item.tempId, "productId", value)
+                            <Select<SelectOption>
+                              instanceId={`product-select-${item.tempId}`}
+                              options={products.map((product) => ({
+                                value: product.id,
+                                label: product.name,
+                              }))}
+                              value={products.map((product) => ({
+                                value: product.id,
+                                label: product.name,
+                              })).find((opt) => opt.value === item.productId) || null}
+                              onChange={(option) =>
+                                updateItem(item.tempId, "productId", option?.value || "")
                               }
-                              disabled={isLoading || productsLoading}
-                            >
-                              <SelectTrigger className="h-9">
-                                <SelectValue placeholder="Select product" />
-                              </SelectTrigger>
-                              <SelectContent className="bg-white">
-                                {products.map((product) => (
-                                  <SelectItem
-                                    key={product.id}
-                                    value={product.id}
-                                  >
-                                    {product.name}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
+                              placeholder="Select product"
+                              isDisabled={isLoading || productsLoading}
+                              isLoading={productsLoading}
+                              isClearable={false}
+                              isSearchable
+                              styles={{
+                                control: (base) => ({ ...base, minHeight: "36px" }),
+                                menu: (base) => ({ ...base, zIndex: 9999 }),
+                              }}
+                            />
                           </div>
                           <div>
                             <label className="text-sm font-medium mb-1 block">

@@ -17,23 +17,21 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Form,
-  FormControl,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import Select from "react-select";
 import { Loader2 } from "lucide-react";
 import { useProductCategories } from "@/lib/hooks/useProductCategories";
 import type { CreateProductData } from "@/lib/services/productService";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+
+interface SelectOption {
+  value: string;
+  label: string;
+}
 
 interface CreateProductDialogProps {
   open: boolean;
@@ -97,6 +95,20 @@ export function CreateProductDialog({
     }
   };
 
+  const categoryOptions: SelectOption[] = categories
+    .filter((cat) => cat.status === "active")
+    .map((category) => ({
+      value: category.id,
+      label: category.name,
+    }));
+
+  const statusOptions: SelectOption[] = [
+    { value: "active", label: "Active" },
+    { value: "inactive", label: "Inactive" },
+    { value: "discontinued", label: "Discontinued" },
+    { value: "out_of_stock", label: "Out of Stock" },
+  ];
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto bg-white">
@@ -123,14 +135,12 @@ export function CreateProductDialog({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Product Name *</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="Product Name"
-                      disabled={isLoading}
-                      className="h-11"
-                      {...field}
-                    />
-                  </FormControl>
+                  <Input
+                    placeholder="Product Name"
+                    disabled={isLoading}
+                    className="h-11"
+                    {...field}
+                  />
                   <FormMessage />
                 </FormItem>
               )}
@@ -143,15 +153,13 @@ export function CreateProductDialog({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Description</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder="Product description..."
-                      disabled={isLoading}
-                      rows={3}
-                      {...field}
-                      value={field.value ?? ""}
-                    />
-                  </FormControl>
+                  <Textarea
+                    placeholder="Product description..."
+                    disabled={isLoading}
+                    rows={3}
+                    {...field}
+                    value={field.value ?? ""}
+                  />
                   <FormMessage />
                 </FormItem>
               )}
@@ -165,15 +173,13 @@ export function CreateProductDialog({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>SKU (Stock Keeping Unit)</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="SKU-12345 (optional)"
-                        disabled={isLoading}
-                        className="h-11"
-                        {...field}
-                        value={field.value ?? ""}
-                      />
-                    </FormControl>
+                    <Input
+                      placeholder="SKU-12345 (optional)"
+                      disabled={isLoading}
+                      className="h-11"
+                      {...field}
+                      value={field.value ?? ""}
+                    />
                     <FormMessage />
                   </FormItem>
                 )}
@@ -186,15 +192,13 @@ export function CreateProductDialog({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Barcode / EAN</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="1234567890123 (optional)"
-                        disabled={isLoading}
-                        className="h-11"
-                        {...field}
-                        value={field.value ?? ""}
-                      />
-                    </FormControl>
+                    <Input
+                      placeholder="1234567890123 (optional)"
+                      disabled={isLoading}
+                      className="h-11"
+                      {...field}
+                      value={field.value ?? ""}
+                    />
                     <FormMessage />
                   </FormItem>
                 )}
@@ -210,26 +214,21 @@ export function CreateProductDialog({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Category *</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      value={field.value || undefined}
-                      disabled={isLoading || categoriesLoading}
-                    >
-                      <FormControl>
-                        <SelectTrigger className="h-11">
-                          <SelectValue placeholder="Select category" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent className="bg-white">
-                        {categories
-                          .filter((cat) => cat.status === "active")
-                          .map((category) => (
-                            <SelectItem key={category.id} value={category.id}>
-                              {category.name}
-                            </SelectItem>
-                          ))}
-                      </SelectContent>
-                    </Select>
+                    <Select<SelectOption>
+                      instanceId="category-select"
+                      options={categoryOptions}
+                      value={categoryOptions.find((opt) => opt.value === field.value) || null}
+                      onChange={(option) => field.onChange(option?.value ?? null)}
+                      placeholder="Select category"
+                      isDisabled={isLoading || categoriesLoading}
+                      isLoading={categoriesLoading}
+                      isClearable={false}
+                      isSearchable
+                      styles={{
+                        control: (base) => ({ ...base, minHeight: "44px" }),
+                        menu: (base) => ({ ...base, zIndex: 9999 }),
+                      }}
+                    />
                     <FormMessage />
                   </FormItem>
                 )}
@@ -242,27 +241,20 @@ export function CreateProductDialog({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Status</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      value={field.value}
-                      disabled={isLoading}
-                    >
-                      <FormControl>
-                        <SelectTrigger className="h-11">
-                          <SelectValue placeholder="Select status" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent className="bg-white">
-                        <SelectItem value="active">Active</SelectItem>
-                        <SelectItem value="inactive">Inactive</SelectItem>
-                        <SelectItem value="discontinued">
-                          Discontinued
-                        </SelectItem>
-                        <SelectItem value="out_of_stock">
-                          Out of Stock
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <Select<SelectOption>
+                      instanceId="status-select"
+                      options={statusOptions}
+                      value={statusOptions.find((opt) => opt.value === field.value) || null}
+                      onChange={(option) => field.onChange(option?.value ?? null)}
+                      placeholder="Select status"
+                      isDisabled={isLoading}
+                      isClearable={false}
+                      isSearchable
+                      styles={{
+                        control: (base) => ({ ...base, minHeight: "44px" }),
+                        menu: (base) => ({ ...base, zIndex: 9999 }),
+                      }}
+                    />
                     <FormMessage />
                   </FormItem>
                 )}
@@ -276,15 +268,13 @@ export function CreateProductDialog({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Notes</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder="Additional notes about the product..."
-                      disabled={isLoading}
-                      rows={3}
-                      {...field}
-                      value={field.value ?? ""}
-                    />
-                  </FormControl>
+                  <Textarea
+                    placeholder="Additional notes about the product..."
+                    disabled={isLoading}
+                    rows={3}
+                    {...field}
+                    value={field.value ?? ""}
+                  />
                   <FormMessage />
                 </FormItem>
               )}

@@ -5,13 +5,12 @@ import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { ClientIntegrationsTable } from "@/components/client-integrations/ClientIntegrationsTable";
 import { CreateClientIntegrationDialog } from "@/components/client-integrations/CreateClientIntegrationDialog";
 import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import Select from "react-select";
+
+interface SelectOption {
+  value: string;
+  label: string;
+}
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import {
   fetchIntegrationsByClientId,
@@ -77,25 +76,26 @@ export default function ClientIntegrationsPage() {
             <label className="text-sm font-medium mb-2 block">
               Select client
             </label>
-            <Select
-              value={selectedClientId ?? ""}
-              onValueChange={handleClientChange}
-              disabled={clientsLoading}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Choose a client..." />
-              </SelectTrigger>
-              <SelectContent className="bg-white">
-                {clients.map((client) => (
-                  <SelectItem key={client.id} value={client.id}>
-                    {client.companyName}
-                    {client.contactPerson
-                      ? ` (${client.contactPerson})`
-                      : ""}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Select<SelectOption>
+              instanceId="client-integration-client-select"
+              options={clients.map((client): SelectOption => ({
+                value: client.id,
+                label: `${client.companyName}${client.contactPerson ? ` (${client.contactPerson})` : ""}`,
+              }))}
+              value={clients.map((client): SelectOption => ({
+                value: client.id,
+                label: `${client.companyName}${client.contactPerson ? ` (${client.contactPerson})` : ""}`,
+              })).find((opt) => opt.value === selectedClientId) || null}
+              onChange={(option) => handleClientChange(option?.value || "")}
+              placeholder="Choose a client..."
+              isDisabled={clientsLoading}
+              isLoading={clientsLoading}
+              isSearchable
+              styles={{
+                control: (base) => ({ ...base, minHeight: "44px" }),
+                menu: (base) => ({ ...base, zIndex: 9999 }),
+              }}
+            />
           </div>
           {selectedClientId && (
             <Button

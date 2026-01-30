@@ -23,13 +23,12 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import Select from "react-select";
+
+interface SelectOption {
+  value: string;
+  label: string;
+}
 import { Checkbox } from "@/components/ui/checkbox";
 import { Loader2 } from "lucide-react";
 import { useExpenseCategories } from "@/lib/hooks/useExpenseCategories";
@@ -169,11 +168,11 @@ export function CreateExpenseDialog({
                       value={
                         field.value
                           ? {
-                              value: field.value,
-                              label:
-                                categories.find((c) => c.id === field.value)
-                                  ?.name || "",
-                            }
+                            value: field.value,
+                            label:
+                              categories.find((c) => c.id === field.value)
+                                ?.name || "",
+                          }
                           : null
                       }
                       onChange={(option) =>
@@ -185,17 +184,15 @@ export function CreateExpenseDialog({
                       placeholder="Search and select category..."
                       classNames={{
                         control: (state) =>
-                          `!min-h-[44px] !border-input !bg-background !shadow-sm ${
-                            state.isFocused
-                              ? "!border-ring !ring-1 !ring-ring"
-                              : ""
+                          `!min-h-[44px] !border-input !bg-background !shadow-sm ${state.isFocused
+                            ? "!border-ring !ring-1 !ring-ring"
+                            : ""
                           }`,
                         menu: () => "!bg-white !border !shadow-md !z-50",
                         option: (state) =>
-                          `!cursor-pointer ${
-                            state.isSelected
-                              ? "!bg-primary !text-primary-foreground"
-                              : state.isFocused
+                          `!cursor-pointer ${state.isSelected
+                            ? "!bg-primary !text-primary-foreground"
+                            : state.isFocused
                               ? "!bg-accent"
                               : ""
                           }`,
@@ -342,30 +339,32 @@ export function CreateExpenseDialog({
             <FormField
               control={form.control}
               name="paymentMethod"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Payment Method</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    value={field.value || undefined}
-                    disabled={isLoading}
-                  >
-                    <FormControl>
-                      <SelectTrigger className="h-11">
-                        <SelectValue placeholder="Select payment method" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent className="bg-white">
-                      {paymentMethods.map((method) => (
-                        <SelectItem key={method.value} value={method.value}>
-                          {method.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
+              render={({ field }) => {
+                const paymentMethodOptions: SelectOption[] = paymentMethods.map((method) => ({
+                  value: method.value,
+                  label: method.label,
+                }));
+                return (
+                  <FormItem>
+                    <FormLabel>Payment Method</FormLabel>
+                    <Select<SelectOption>
+                      instanceId="expense-payment-method-select"
+                      options={paymentMethodOptions}
+                      value={paymentMethodOptions.find((opt) => opt.value === field.value) || null}
+                      onChange={(option) => field.onChange(option?.value || null)}
+                      placeholder="Select payment method"
+                      isDisabled={isLoading}
+                      isClearable
+                      isSearchable
+                      styles={{
+                        control: (base) => ({ ...base, minHeight: "44px" }),
+                        menu: (base) => ({ ...base, zIndex: 9999 }),
+                      }}
+                    />
+                    <FormMessage />
+                  </FormItem>
+                );
+              }}
             />
 
             {/* Has Receipt */}
