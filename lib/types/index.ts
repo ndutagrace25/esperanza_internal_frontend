@@ -98,6 +98,22 @@ export type Client = {
   updatedAt: string;
 };
 
+// Client Integration types (dynamic label/value per client)
+export type ClientIntegration = {
+  id: string;
+  clientId: string;
+  client?: {
+    id: string;
+    companyName: string;
+    contactPerson: string | null;
+    email: string | null;
+  };
+  label: string;
+  value: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
 // Product Category types
 export type ProductCategory = {
   id: string;

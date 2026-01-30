@@ -13,6 +13,7 @@ import {
   LogOut,
   Menu,
   Package,
+  Plug,
   ShoppingCart,
   Users,
 } from "lucide-react";
@@ -24,6 +25,7 @@ import { useState } from "react";
 const allMenuItems = [
   { name: "Employees", icon: Users, href: "/employees" },
   { name: "Clients", icon: Briefcase, href: "/clients" },
+  { name: "Client Integrations", icon: Plug, href: "/client-integrations" },
   { name: "Products", icon: Package, href: "/products" },
   { name: "Job Cards", icon: FileText, href: "/job-cards" },
   { name: "Sales", icon: ShoppingCart, href: "/sales" },
