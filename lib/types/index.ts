@@ -225,6 +225,18 @@ export type SaleItem = {
   updatedAt: string;
 };
 
+export type SaleInstallment = {
+  id: string;
+  saleId: string;
+  amount: string;
+  dueDate: string | null;
+  paidAt: string;
+  status: "PENDING" | "PAID";
+  notes: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
 export type Sale = {
   id: string;
   saleNumber: string;
@@ -239,8 +251,12 @@ export type Sale = {
   saleDate: string;
   status: string;
   totalAmount: string; // Decimal as string
+  agreedMonthlyInstallmentAmount?: string | null;
+  paidAmount?: string;
+  completedAt?: string | null;
   notes: string | null;
   items: SaleItem[];
+  installments?: SaleInstallment[];
   createdAt: string;
   updatedAt: string;
 };

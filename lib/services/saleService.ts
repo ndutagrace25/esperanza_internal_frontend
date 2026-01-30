@@ -2,6 +2,7 @@ import api from "../api";
 import type {
   Sale,
   SaleItem,
+  SaleInstallment,
   PaginatedResponse,
   PaginationOptions,
 } from "../types";
@@ -17,6 +18,12 @@ export type UpdateSaleItemData = Partial<
   Omit<SaleItem, "id" | "saleId" | "createdAt" | "updatedAt" | "product">
 >;
 
+export type FirstInstallmentData = {
+  amount: string | number;
+  paidAt?: string;
+  notes?: string | null;
+};
+
 export type CreateSaleData = Omit<
   Sale,
   | "id"
@@ -26,9 +33,13 @@ export type CreateSaleData = Omit<
   | "client"
   | "items"
   | "totalAmount"
+  | "paidAmount"
+  | "completedAt"
+  | "installments"
 > & {
   clientId: string;
   items?: CreateSaleItemData[];
+  firstInstallment?: FirstInstallmentData;
 };
 
 export type UpdateSaleData = Partial<
@@ -41,10 +52,29 @@ export type UpdateSaleData = Partial<
     | "client"
     | "items"
     | "totalAmount"
+    | "paidAmount"
+    | "completedAt"
+    | "installments"
   >
 > & {
   clientId?: string;
 };
+
+export type CreateSaleInstallmentData = {
+  amount: number | string;
+  dueDate?: string | null;
+  paidAt?: string;
+  status?: "PENDING" | "PAID";
+  notes?: string | null;
+};
+
+export type UpdateSaleInstallmentData = Partial<{
+  amount: number | string;
+  dueDate: string | null;
+  paidAt: string;
+  status: "PENDING" | "PAID";
+  notes: string | null;
+}>;
 
 // Get all sales with pagination
 export async function getAllSales(
@@ -118,6 +148,33 @@ export async function deleteSaleItem(id: string): Promise<void> {
   await api.delete(`/sales/items/${id}`);
 }
 
+// Sale Installment operations
+export async function createSaleInstallment(
+  saleId: string,
+  data: CreateSaleInstallmentData
+): Promise<SaleInstallment> {
+  const response = await api.post<SaleInstallment>(
+    `/sales/${saleId}/installments`,
+    data
+  );
+  return response.data;
+}
+
+export async function updateSaleInstallment(
+  id: string,
+  data: UpdateSaleInstallmentData
+): Promise<SaleInstallment> {
+  const response = await api.patch<SaleInstallment>(
+    `/sales/installments/${id}`,
+    data
+  );
+  return response.data;
+}
+
+export async function deleteSaleInstallment(id: string): Promise<void> {
+  await api.delete(`/sales/installments/${id}`);
+}
+
 export const saleService = {
   getAll: getAllSales,
   getById: getSaleById,
@@ -128,4 +185,7 @@ export const saleService = {
   createItem: createSaleItem,
   updateItem: updateSaleItem,
   deleteItem: deleteSaleItem,
+  createInstallment: createSaleInstallment,
+  updateInstallment: updateSaleInstallment,
+  deleteInstallment: deleteSaleInstallment,
 };

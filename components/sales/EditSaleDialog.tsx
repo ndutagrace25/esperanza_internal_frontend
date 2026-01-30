@@ -107,6 +107,7 @@ export function EditSaleDialog({
       clientId: sale.clientId,
       saleDate: formatDateForInput(sale.saleDate),
       status: sale.status,
+      agreedMonthlyInstallmentAmount: sale.agreedMonthlyInstallmentAmount ?? undefined,
       notes: sale.notes ?? undefined,
     },
   });
@@ -118,6 +119,7 @@ export function EditSaleDialog({
         clientId: sale.clientId,
         saleDate: formatDateForInput(sale.saleDate),
         status: sale.status,
+        agreedMonthlyInstallmentAmount: sale.agreedMonthlyInstallmentAmount ?? undefined,
         notes: sale.notes ?? undefined,
       });
       // Load existing items
@@ -135,6 +137,11 @@ export function EditSaleDialog({
         saleDate: data.saleDate
           ? new Date(data.saleDate).toISOString()
           : undefined,
+        agreedMonthlyInstallmentAmount:
+          data.agreedMonthlyInstallmentAmount != null &&
+          String(data.agreedMonthlyInstallmentAmount).trim() !== ""
+            ? String(data.agreedMonthlyInstallmentAmount)
+            : undefined,
         notes: data.notes && data.notes.trim() !== "" ? data.notes : null,
       };
 
@@ -371,6 +378,37 @@ export function EditSaleDialog({
                         <SelectItem value="CANCELLED">Cancelled</SelectItem>
                       </SelectContent>
                     </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Agreed monthly installment (optional) */}
+              <FormField
+                control={form.control}
+                name="agreedMonthlyInstallmentAmount"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Agreed monthly installment (KES)</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        placeholder="Optional – e.g. 5000"
+                        disabled={isLoading}
+                        className="h-11"
+                        {...field}
+                        value={field.value ?? ""}
+                        onChange={(e) =>
+                          field.onChange(
+                            e.target.value === ""
+                              ? undefined
+                              : e.target.value
+                          )
+                        }
+                      />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}

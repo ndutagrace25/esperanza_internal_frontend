@@ -70,15 +70,21 @@ export function CreateSaleDialog({
     Array<CreateSaleItemData & { tempId: string }>
   >([]);
 
-  // Get today's date as default sale date
+  // First installment (optional) – e.g. deposit paid when creating the sale
   const today = new Date();
   const defaultSaleDate = today.toISOString().split("T")[0];
+  const [firstInstallmentAmount, setFirstInstallmentAmount] = useState("");
+  const [firstInstallmentDate, setFirstInstallmentDate] = useState(
+    today.toISOString().split("T")[0]
+  );
+  const [firstInstallmentNotes, setFirstInstallmentNotes] = useState("");
 
   const form = useForm<CreateSaleData>({
     defaultValues: {
       clientId: "",
       saleDate: defaultSaleDate,
       status: "DRAFT",
+      agreedMonthlyInstallmentAmount: undefined,
       notes: undefined,
     },
   });
@@ -108,7 +114,21 @@ export function CreateSaleDialog({
       }
     });
 
-    // If there are validation errors, show them and stop submission
+    // Validate first installment if provided
+    const firstAmount = firstInstallmentAmount.trim()
+      ? Number(firstInstallmentAmount)
+      : 0;
+    if (firstAmount > 0 && items.length > 0) {
+      const grandTotal = items.reduce(
+        (sum, item) => sum + item.quantity * Number(item.unitPrice),
+        0
+      );
+      if (firstAmount > grandTotal) {
+        errors.push(
+          "First installment amount cannot exceed the sale total (Grand Total)"
+        );
+      }
+    }
     if (errors.length > 0) {
       setValidationErrors(errors);
       setIsLoading(false);
@@ -121,6 +141,11 @@ export function CreateSaleDialog({
       const cleanedData: CreateSaleData = {
         ...data,
         saleDate: new Date(data.saleDate).toISOString(),
+        agreedMonthlyInstallmentAmount:
+          data.agreedMonthlyInstallmentAmount != null &&
+          String(data.agreedMonthlyInstallmentAmount).trim() !== ""
+            ? String(data.agreedMonthlyInstallmentAmount)
+            : undefined,
         notes: data.notes && data.notes.trim() !== "" ? data.notes : null,
       };
 
@@ -134,16 +159,33 @@ export function CreateSaleDialog({
         };
       });
 
-      // Create sale with items in one request
+      // Optional first installment (e.g. deposit paid at creation)
+      const firstAmount = firstInstallmentAmount.trim()
+        ? Number(firstInstallmentAmount)
+        : 0;
+      const firstInstallment =
+        firstAmount > 0
+          ? {
+              amount: firstAmount,
+              paidAt: firstInstallmentDate || new Date().toISOString(),
+              notes:
+                firstInstallmentNotes.trim() || undefined,
+            }
+          : undefined;
+
       await dispatch(
         createSale({
           ...cleanedData,
           items: itemsData,
+          ...(firstInstallment && { firstInstallment }),
         })
       ).unwrap();
 
       form.reset();
       setItems([]);
+      setFirstInstallmentAmount("");
+      setFirstInstallmentDate(new Date().toISOString().split("T")[0]);
+      setFirstInstallmentNotes("");
       onSuccess();
     } catch {
       // Error is handled by Redux state
@@ -318,6 +360,37 @@ export function CreateSaleDialog({
                   </FormItem>
                 )}
               />
+
+              {/* Agreed monthly installment (optional) */}
+              <FormField
+                control={form.control}
+                name="agreedMonthlyInstallmentAmount"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Agreed monthly installment (KES)</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        placeholder="Optional – e.g. 5000"
+                        disabled={isLoading}
+                        className="h-11"
+                        {...field}
+                        value={field.value ?? ""}
+                        onChange={(e) =>
+                          field.onChange(
+                            e.target.value === ""
+                              ? undefined
+                              : e.target.value
+                          )
+                        }
+                      />
+                    </FormControl>
+                    <FormMessage className="text-red-500" />
+                  </FormItem>
+                )}
+              />
             </div>
 
             <Separator className="my-6" />
@@ -469,6 +542,72 @@ export function CreateSaleDialog({
                 </div>
               )}
             </div>
+
+            {/* First installment (optional) */}
+            {items.length > 0 && (
+              <>
+                <Separator className="my-6" />
+                <div className="space-y-4">
+                  <div>
+                    <h3 className="text-lg font-semibold">
+                      First installment (optional)
+                    </h3>
+                    <p className="text-sm text-muted-foreground">
+                      If the client is paying an initial amount now (e.g.
+                      deposit), enter it here.
+                    </p>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <label className="text-sm font-medium mb-1 block">
+                        Amount (KES)
+                      </label>
+                      <Input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        placeholder="e.g. 5000"
+                        value={firstInstallmentAmount}
+                        onChange={(e) =>
+                          setFirstInstallmentAmount(e.target.value)
+                        }
+                        disabled={isLoading}
+                        className="h-11"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium mb-1 block">
+                        Date paid
+                      </label>
+                      <Input
+                        type="date"
+                        value={firstInstallmentDate}
+                        onChange={(e) =>
+                          setFirstInstallmentDate(e.target.value)
+                        }
+                        disabled={isLoading}
+                        className="h-11"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium mb-1 block">
+                        Notes
+                      </label>
+                      <Input
+                        type="text"
+                        placeholder="e.g. Deposit"
+                        value={firstInstallmentNotes}
+                        onChange={(e) =>
+                          setFirstInstallmentNotes(e.target.value)
+                        }
+                        disabled={isLoading}
+                        className="h-11"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
 
             {/* Notes */}
             <FormField
