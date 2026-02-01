@@ -66,6 +66,9 @@ export function CreateClientDialog({
       postalCode: undefined,
       website: undefined,
       taxId: undefined,
+      backendBaseUrl: undefined,
+      apiUserName: undefined,
+      apiPassword: undefined,
       status: "active",
       notes: undefined,
       assignedToId: undefined,
@@ -101,6 +104,18 @@ export function CreateClientDialog({
         website:
           data.website && data.website.trim() !== "" ? data.website : null,
         taxId: data.taxId && data.taxId.trim() !== "" ? data.taxId : null,
+        backendBaseUrl:
+          data.backendBaseUrl && data.backendBaseUrl.trim() !== ""
+            ? data.backendBaseUrl
+            : null,
+        apiUserName:
+          data.apiUserName && data.apiUserName.trim() !== ""
+            ? data.apiUserName
+            : null,
+        apiPassword:
+          data.apiPassword && data.apiPassword.trim() !== ""
+            ? data.apiPassword
+            : null,
         notes: data.notes && data.notes.trim() !== "" ? data.notes : null,
         assignedToId:
           data.assignedToId && data.assignedToId !== ""
@@ -383,6 +398,67 @@ export function CreateClientDialog({
                   </FormItem>
                 )}
               />
+            </div>
+
+            <div className="space-y-4">
+              <p className="text-sm font-medium text-muted-foreground">
+                API credentials (for license extension)
+              </p>
+              <FormField
+                control={form.control}
+                name="backendBaseUrl"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Backend base URL</FormLabel>
+                    <Input
+                      type="url"
+                      placeholder="https://client-system.example.com"
+                      disabled={isLoading}
+                      className="h-11"
+                      {...field}
+                      value={field.value ?? ""}
+                    />
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="apiUserName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>API username</FormLabel>
+                      <Input
+                        placeholder="API login username"
+                        disabled={isLoading}
+                        className="h-11"
+                        {...field}
+                        value={field.value ?? ""}
+                      />
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="apiPassword"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>API password</FormLabel>
+                      <Input
+                        type="password"
+                        placeholder="API login password"
+                        disabled={isLoading}
+                        className="h-11"
+                        {...field}
+                        value={field.value ?? ""}
+                      />
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

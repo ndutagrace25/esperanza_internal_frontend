@@ -124,17 +124,17 @@ function ViewSaleContent({
     <div className="space-y-6">
       {/* Payment extension (if requested or has due date) */}
       {hasExtension && (
-        <div className="rounded-lg border border-amber-200 bg-amber-50/50 dark:border-amber-800 dark:bg-amber-950/20 p-4 space-y-1">
-          <h3 className="text-sm font-semibold text-amber-800 dark:text-amber-200">
+        <div className="rounded-lg border border-red-200 bg-red-50/50 dark:border-red-800 dark:bg-red-950/20 p-4 space-y-1">
+          <h3 className="text-sm font-semibold text-red-800 dark:text-red-200">
             Payment extension
           </h3>
           {sale.requestedPaymentDateExtension && (
-            <p className="text-sm text-amber-700 dark:text-amber-300">
+            <p className="text-sm text-red-700 dark:text-red-300">
               Client requested a payment date extension.
             </p>
           )}
           {sale.paymentExtensionDueDate && (
-            <p className="text-sm text-amber-700 dark:text-amber-300">
+            <p className="text-sm text-red-700 dark:text-red-300">
               Extension due date: {formatDate(sale.paymentExtensionDueDate)}
             </p>
           )}
@@ -503,7 +503,7 @@ export function SalesTable({
                       <div className="flex items-center gap-2 flex-wrap">
                         <span>{sale.saleNumber}</span>
                         {(sale.requestedPaymentDateExtension || sale.paymentExtensionDueDate) && (
-                          <Badge variant="outline" className="text-xs font-normal text-amber-700 border-amber-300">
+                          <Badge variant="outline" className="text-xs font-normal text-red-700 border-red-300">
                             Extension
                           </Badge>
                         )}

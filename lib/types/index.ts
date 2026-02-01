@@ -78,6 +78,9 @@ export type Client = {
   postalCode: string | null;
   website: string | null;
   taxId: string | null;
+  backendBaseUrl: string | null;
+  apiUserName: string | null;
+  apiPassword: string | null;
   status: string;
   notes: string | null;
   broughtInById: string | null;

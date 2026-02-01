@@ -70,6 +70,9 @@ export function EditClientDialog({
       postalCode: client.postalCode ?? undefined,
       website: client.website ?? undefined,
       taxId: client.taxId ?? undefined,
+      backendBaseUrl: client.backendBaseUrl ?? undefined,
+      apiUserName: client.apiUserName ?? undefined,
+      apiPassword: undefined,
       status: client.status,
       notes: client.notes ?? undefined,
       assignedToId: client.assignedToId ?? undefined,
@@ -92,6 +95,9 @@ export function EditClientDialog({
         postalCode: client.postalCode ?? undefined,
         website: client.website ?? undefined,
         taxId: client.taxId ?? undefined,
+        backendBaseUrl: client.backendBaseUrl ?? undefined,
+        apiUserName: client.apiUserName ?? undefined,
+        apiPassword: undefined,
         status: client.status,
         notes: client.notes ?? undefined,
         assignedToId: client.assignedToId ?? undefined,
@@ -128,6 +134,18 @@ export function EditClientDialog({
         website:
           data.website && data.website.trim() !== "" ? data.website : null,
         taxId: data.taxId && data.taxId.trim() !== "" ? data.taxId : null,
+        backendBaseUrl:
+          data.backendBaseUrl && data.backendBaseUrl.trim() !== ""
+            ? data.backendBaseUrl
+            : null,
+        apiUserName:
+          data.apiUserName && data.apiUserName.trim() !== ""
+            ? data.apiUserName
+            : null,
+        ...(data.apiPassword != null &&
+          data.apiPassword.trim() !== "" && {
+            apiPassword: data.apiPassword.trim(),
+          }),
         notes: data.notes && data.notes.trim() !== "" ? data.notes : null,
         assignedToId:
           data.assignedToId && data.assignedToId !== ""
@@ -412,6 +430,67 @@ export function EditClientDialog({
                   </FormItem>
                 )}
               />
+            </div>
+
+            <div className="space-y-4">
+              <p className="text-sm font-medium text-muted-foreground">
+                API credentials (for license extension)
+              </p>
+              <FormField
+                control={form.control}
+                name="backendBaseUrl"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Backend base URL</FormLabel>
+                    <Input
+                      type="url"
+                      placeholder="https://client-system.example.com"
+                      disabled={isLoading}
+                      className="h-11"
+                      {...field}
+                      value={field.value ?? ""}
+                    />
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="apiUserName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>API username</FormLabel>
+                      <Input
+                        placeholder="API login username"
+                        disabled={isLoading}
+                        className="h-11"
+                        {...field}
+                        value={field.value ?? ""}
+                      />
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="apiPassword"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>API password</FormLabel>
+                      <Input
+                        type="password"
+                        placeholder="Leave blank to keep current"
+                        disabled={isLoading}
+                        className="h-11"
+                        {...field}
+                        value={field.value ?? ""}
+                      />
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
