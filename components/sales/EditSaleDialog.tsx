@@ -44,6 +44,7 @@ import {
 } from "@/lib/services/saleService";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface EditSaleDialogProps {
   open: boolean;
@@ -108,6 +109,10 @@ export function EditSaleDialog({
       status: sale.status,
       agreedMonthlyInstallmentAmount: sale.agreedMonthlyInstallmentAmount ?? undefined,
       notes: sale.notes ?? undefined,
+      requestedPaymentDateExtension: sale.requestedPaymentDateExtension ?? false,
+      paymentExtensionDueDate: sale.paymentExtensionDueDate
+        ? formatDateForInput(sale.paymentExtensionDueDate)
+        : undefined,
     },
   });
 
@@ -120,6 +125,10 @@ export function EditSaleDialog({
         status: sale.status,
         agreedMonthlyInstallmentAmount: sale.agreedMonthlyInstallmentAmount ?? undefined,
         notes: sale.notes ?? undefined,
+        requestedPaymentDateExtension: sale.requestedPaymentDateExtension ?? false,
+        paymentExtensionDueDate: sale.paymentExtensionDueDate
+          ? formatDateForInput(sale.paymentExtensionDueDate)
+          : undefined,
       });
       // Load existing items
       setItems(sale.items || []);
@@ -142,6 +151,14 @@ export function EditSaleDialog({
             ? String(data.agreedMonthlyInstallmentAmount)
             : undefined,
         notes: data.notes && data.notes.trim() !== "" ? data.notes : null,
+        requestedPaymentDateExtension: data.requestedPaymentDateExtension ?? false,
+        // When extension is removed (checkbox false), always clear the date
+        paymentExtensionDueDate:
+          data.requestedPaymentDateExtension &&
+          data.paymentExtensionDueDate &&
+          data.paymentExtensionDueDate.trim() !== ""
+            ? new Date(data.paymentExtensionDueDate).toISOString()
+            : null,
       };
 
       // Update sale
@@ -420,6 +437,60 @@ export function EditSaleDialog({
                   </FormItem>
                 )}
               />
+            </div>
+
+            {/* Payment extension */}
+            <div className="space-y-4">
+              <FormField
+                control={form.control}
+                name="requestedPaymentDateExtension"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value ?? false}
+                        onCheckedChange={(checked) => {
+                          field.onChange(checked);
+                          // When unchecking, clear extension date so extension is fully removed
+                          if (!checked) {
+                            form.setValue("paymentExtensionDueDate", undefined);
+                          }
+                        }}
+                        disabled={isLoading}
+                      />
+                    </FormControl>
+                    <div className="space-y-1 leading-none">
+                      <FormLabel>Client requested payment date extension</FormLabel>
+                    </div>
+                  </FormItem>
+                )}
+              />
+              {form.watch("requestedPaymentDateExtension") && (
+                <FormField
+                  control={form.control}
+                  name="paymentExtensionDueDate"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Extension due date</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="date"
+                          disabled={isLoading}
+                          className="h-11"
+                          {...field}
+                          value={field.value ?? ""}
+                          onChange={(e) =>
+                            field.onChange(
+                              e.target.value ? e.target.value : undefined
+                            )
+                          }
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
             </div>
 
             <Separator className="my-6" />

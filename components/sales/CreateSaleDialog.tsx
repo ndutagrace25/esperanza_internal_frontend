@@ -38,6 +38,7 @@ import type {
 } from "@/lib/services/saleService";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface CreateSaleDialogProps {
   open: boolean;
@@ -85,6 +86,8 @@ export function CreateSaleDialog({
       status: "DRAFT",
       agreedMonthlyInstallmentAmount: undefined,
       notes: undefined,
+      requestedPaymentDateExtension: false,
+      paymentExtensionDueDate: undefined,
     },
   });
 
@@ -146,6 +149,13 @@ export function CreateSaleDialog({
             ? String(data.agreedMonthlyInstallmentAmount)
             : undefined,
         notes: data.notes && data.notes.trim() !== "" ? data.notes : null,
+        requestedPaymentDateExtension: data.requestedPaymentDateExtension ?? false,
+        paymentExtensionDueDate:
+          data.requestedPaymentDateExtension &&
+          data.paymentExtensionDueDate &&
+          data.paymentExtensionDueDate.trim() !== ""
+            ? new Date(data.paymentExtensionDueDate).toISOString()
+            : undefined,
       };
 
       // Prepare items data
@@ -398,6 +408,59 @@ export function CreateSaleDialog({
                   </FormItem>
                 )}
               />
+            </div>
+
+            {/* Payment extension (optional) */}
+            <div className="space-y-4">
+              <FormField
+                control={form.control}
+                name="requestedPaymentDateExtension"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value ?? false}
+                        onCheckedChange={(checked) => {
+                          field.onChange(checked);
+                          if (!checked) {
+                            form.setValue("paymentExtensionDueDate", undefined);
+                          }
+                        }}
+                        disabled={isLoading}
+                      />
+                    </FormControl>
+                    <div className="space-y-1 leading-none">
+                      <FormLabel>Client requested payment date extension</FormLabel>
+                    </div>
+                  </FormItem>
+                )}
+              />
+              {form.watch("requestedPaymentDateExtension") && (
+                <FormField
+                  control={form.control}
+                  name="paymentExtensionDueDate"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Extension due date</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="date"
+                          disabled={isLoading}
+                          className="h-11"
+                          {...field}
+                          value={field.value ?? ""}
+                          onChange={(e) =>
+                            field.onChange(
+                              e.target.value ? e.target.value : undefined
+                            )
+                          }
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
             </div>
 
             <Separator className="my-6" />

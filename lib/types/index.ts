@@ -271,6 +271,8 @@ export type Sale = {
   paidAmount?: string;
   completedAt?: string | null;
   notes: string | null;
+  requestedPaymentDateExtension?: boolean;
+  paymentExtensionDueDate?: string | null;
   items: SaleItem[];
   installments?: SaleInstallment[];
   createdAt: string;

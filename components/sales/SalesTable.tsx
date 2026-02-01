@@ -116,8 +116,31 @@ function ViewSaleContent({
     }
   };
 
+  const hasExtension =
+    sale.requestedPaymentDateExtension === true ||
+    (sale.paymentExtensionDueDate != null && sale.paymentExtensionDueDate !== "");
+
   return (
     <div className="space-y-6">
+      {/* Payment extension (if requested or has due date) */}
+      {hasExtension && (
+        <div className="rounded-lg border border-amber-200 bg-amber-50/50 dark:border-amber-800 dark:bg-amber-950/20 p-4 space-y-1">
+          <h3 className="text-sm font-semibold text-amber-800 dark:text-amber-200">
+            Payment extension
+          </h3>
+          {sale.requestedPaymentDateExtension && (
+            <p className="text-sm text-amber-700 dark:text-amber-300">
+              Client requested a payment date extension.
+            </p>
+          )}
+          {sale.paymentExtensionDueDate && (
+            <p className="text-sm text-amber-700 dark:text-amber-300">
+              Extension due date: {formatDate(sale.paymentExtensionDueDate)}
+            </p>
+          )}
+        </div>
+      )}
+
       {/* Items */}
       {sale.items.length > 0 ? (
         <div className="space-y-2">
@@ -477,7 +500,14 @@ export function SalesTable({
                 <TableRow key={sale.id}>
                   <TableCell className="font-medium">
                     <div className="flex flex-col">
-                      <span>{sale.saleNumber}</span>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span>{sale.saleNumber}</span>
+                        {(sale.requestedPaymentDateExtension || sale.paymentExtensionDueDate) && (
+                          <Badge variant="outline" className="text-xs font-normal text-amber-700 border-amber-300">
+                            Extension
+                          </Badge>
+                        )}
+                      </div>
                       {/* Mobile view: show items count and amount */}
                       <div className="text-xs text-muted-foreground md:hidden mt-1 space-y-0.5">
                         <span>
