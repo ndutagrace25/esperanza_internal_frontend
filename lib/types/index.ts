@@ -285,9 +285,11 @@ export type Sale = {
 };
 
 export type UnpaidSalesTotals = {
+  /** Non-cancelled sales with money still owed */
   saleCount: number;
-  /** Sum of paidAmount on sales that still have a balance */
+  /** Payments on those sales plus all payments recorded on cancelled sales */
   totalPaid: string;
+  /** Balance owed only on non-cancelled sales */
   totalOutstanding: string;
 };
 

@@ -405,6 +405,9 @@ export function SalesTable({
   };
 
   const handleEditClick = (sale: Sale) => {
+    if (sale.status === "CANCELLED" || sale.status === "COMPLETED") {
+      return;
+    }
     setSaleToEdit(sale);
     setEditDialogOpen(true);
   };
@@ -439,9 +442,10 @@ export function SalesTable({
   };
 
   const getStatusBadgeVariant = (status: string) => {
-    switch (status) {
+    const s = String(status ?? "").toUpperCase();
+    switch (s) {
       case "COMPLETED":
-        return "default";
+        return "success" as const;
       case "PENDING":
         return "secondary";
       case "DRAFT":
@@ -454,7 +458,8 @@ export function SalesTable({
   };
 
   const getStatusLabel = (status: string) => {
-    switch (status) {
+    const s = String(status ?? "").toUpperCase();
+    switch (s) {
       case "DRAFT":
         return "Draft";
       case "PENDING":
@@ -704,7 +709,14 @@ export function SalesTable({
       <Dialog open={viewDialogOpen} onOpenChange={setViewDialogOpen}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-white">
           <DialogHeader>
-            <DialogTitle>Sale {saleToView?.saleNumber}</DialogTitle>
+            <DialogTitle className="flex flex-wrap items-center gap-2">
+              <span>Sale {saleToView?.saleNumber}</span>
+              {saleToView && (
+                <Badge variant={getStatusBadgeVariant(saleToView.status)}>
+                  {getStatusLabel(saleToView.status)}
+                </Badge>
+              )}
+            </DialogTitle>
             <DialogDescription>
               View sale details and record payments when the client pays. Use
               &quot;Record payment&quot; below to add an installment.

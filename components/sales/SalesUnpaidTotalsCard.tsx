@@ -22,9 +22,14 @@ function formatCurrency(amount: string) {
 
 type SalesUnpaidTotalsCardProps = {
   refreshKey: number;
+  /** Called when the user clicks Refresh (e.g. clear list filters on the sales page). */
+  onRefresh?: () => void;
 };
 
-export function SalesUnpaidTotalsCard({ refreshKey }: SalesUnpaidTotalsCardProps) {
+export function SalesUnpaidTotalsCard({
+  refreshKey,
+  onRefresh,
+}: SalesUnpaidTotalsCardProps) {
   const [data, setData] = useState<UnpaidSalesTotals | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -81,7 +86,9 @@ export function SalesUnpaidTotalsCard({ refreshKey }: SalesUnpaidTotalsCardProps
     return null;
   }
 
-  const empty = data.saleCount === 0;
+  const nothingOutstanding =
+    data.saleCount === 0 && Number(data.totalOutstanding) === 0;
+  const hasCollected = Number(data.totalPaid) > 0;
 
   return (
     <Card className="overflow-hidden">
@@ -97,7 +104,10 @@ export function SalesUnpaidTotalsCard({ refreshKey }: SalesUnpaidTotalsCardProps
         <Button
           variant="outline"
           size="sm"
-          onClick={() => void load()}
+          onClick={() => {
+            onRefresh?.();
+            void load();
+          }}
           disabled={loading}
           className="w-full shrink-0 sm:w-auto"
         >
@@ -107,7 +117,7 @@ export function SalesUnpaidTotalsCard({ refreshKey }: SalesUnpaidTotalsCardProps
       </CardHeader>
       <CardContent className="pt-0">
         <div className="rounded-lg border bg-muted/40 px-4 py-3 sm:px-5 sm:py-4">
-          {empty ? (
+          {nothingOutstanding && !hasCollected ? (
             <p className="text-sm text-muted-foreground">
               All non-cancelled sales are fully paid.
             </p>
@@ -122,7 +132,8 @@ export function SalesUnpaidTotalsCard({ refreshKey }: SalesUnpaidTotalsCardProps
                     {formatCurrency(data.totalPaid)}
                   </span>
                   <span className="text-xs text-muted-foreground">
-                    Recorded on these sales
+                    Open sales with a balance, plus payments kept on cancelled
+                    sales
                   </span>
                 </div>
                 <div className="flex flex-col gap-0.5">
@@ -134,13 +145,20 @@ export function SalesUnpaidTotalsCard({ refreshKey }: SalesUnpaidTotalsCardProps
                   </span>
                 </div>
               </div>
-              <p className="text-sm text-muted-foreground">
-                Across{" "}
-                <span className="font-medium tabular-nums text-foreground">
-                  {data.saleCount}
-                </span>{" "}
-                {data.saleCount === 1 ? "sale" : "sales"} with a balance
-              </p>
+              {data.saleCount > 0 ? (
+                <p className="text-sm text-muted-foreground">
+                  Across{" "}
+                  <span className="font-medium tabular-nums text-foreground">
+                    {data.saleCount}
+                  </span>{" "}
+                  {data.saleCount === 1 ? "sale" : "sales"} with a balance
+                </p>
+              ) : hasCollected ? (
+                <p className="text-sm text-muted-foreground">
+                  No outstanding balances. Collected includes instalments
+                  received before any sale was cancelled.
+                </p>
+              ) : null}
             </div>
           )}
         </div>

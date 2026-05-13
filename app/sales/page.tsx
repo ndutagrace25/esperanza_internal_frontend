@@ -42,6 +42,13 @@ export default function SalesPage() {
     setUnpaidTotalsRefreshKey((k) => k + 1);
   }, []);
 
+  /** Outstanding card Refresh: reload totals and reset list search/pagination. */
+  const handleSalesUnpaidCardRefresh = useCallback(() => {
+    setSearchTerm("");
+    setCurrentPage(1);
+    void dispatch(fetchSales({ page: 1, limit: 10 }));
+  }, [dispatch]);
+
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
 
   const fetchSalesList = useCallback(() => {
@@ -106,7 +113,10 @@ export default function SalesPage() {
           </Alert>
         )}
 
-        <SalesUnpaidTotalsCard refreshKey={unpaidTotalsRefreshKey} />
+        <SalesUnpaidTotalsCard
+          refreshKey={unpaidTotalsRefreshKey}
+          onRefresh={handleSalesUnpaidCardRefresh}
+        />
 
         {/* Search Bar */}
         <div className="flex gap-2">
