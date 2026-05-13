@@ -399,6 +399,15 @@ export type UnpaidExpenseSummary = {
   };
 };
 
+/** Current user's unpaid expense claims (draft / pending / approved). */
+export type MyUnpaidExpenseSummary = {
+  byStatus: UnpaidExpenseSummaryStatusRow[];
+  totals: {
+    expenseCount: number;
+    totalAmount: string;
+  };
+};
+
 // API Error types
 export type ApiError = {
   error: string;

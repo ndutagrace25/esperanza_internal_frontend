@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { JobCardsTable } from "@/components/job-cards/JobCardsTable";
+import { MyExpenseUnpaidSummaryCard } from "@/components/job-cards/MyExpenseUnpaidSummaryCard";
 import { CreateJobCardDialog } from "@/components/job-cards/CreateJobCardDialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,9 +17,20 @@ export default function JobCardsPage() {
   const { jobCards, pagination, isLoading, error } = useAppSelector(
     (state) => state.jobCard
   );
+  const { employee } = useAppSelector((state) => state.auth);
+  const isDirector = employee?.role?.name === "DIRECTOR";
+
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [myExpenseSummaryRefreshKey, setMyExpenseSummaryRefreshKey] =
+    useState(0);
+
+  const bumpMyExpenseSummary = useCallback(() => {
+    if (!isDirector) {
+      setMyExpenseSummaryRefreshKey((k) => k + 1);
+    }
+  }, [isDirector]);
 
   useEffect(() => {
     dispatch(fetchJobCards({ page: currentPage, limit: 10 }));
@@ -78,6 +90,10 @@ export default function JobCardsPage() {
           </Alert>
         )}
 
+        {!isDirector && (
+          <MyExpenseUnpaidSummaryCard refreshKey={myExpenseSummaryRefreshKey} />
+        )}
+
         {/* Search Bar */}
         <form onSubmit={handleSearch} className="flex gap-2">
           <div className="relative flex-1">
@@ -112,6 +128,7 @@ export default function JobCardsPage() {
             currentPage={currentPage}
             onPageChange={setCurrentPage}
             isLoading={isLoading}
+            onJobCardsChanged={bumpMyExpenseSummary}
           />
         )}
 
@@ -122,6 +139,7 @@ export default function JobCardsPage() {
           onSuccess={() => {
             setIsCreateDialogOpen(false);
             dispatch(fetchJobCards({ page: currentPage, limit: 10 }));
+            bumpMyExpenseSummary();
           }}
         />
       </div>

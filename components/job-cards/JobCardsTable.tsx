@@ -64,6 +64,7 @@ interface JobCardsTableProps {
   currentPage: number;
   onPageChange: (page: number) => void;
   isLoading: boolean;
+  onJobCardsChanged?: () => void;
 }
 
 export function JobCardsTable({
@@ -72,6 +73,7 @@ export function JobCardsTable({
   currentPage,
   onPageChange,
   isLoading,
+  onJobCardsChanged,
 }: JobCardsTableProps) {
   const dispatch = useAppDispatch();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -97,14 +99,16 @@ export function JobCardsTable({
       await dispatch(deleteJobCard(jobCardToDelete.id));
       setDeleteDialogOpen(false);
       setJobCardToDelete(null);
-      dispatch(fetchJobCards({ page: currentPage, limit: 10 }));
+      await dispatch(fetchJobCards({ page: currentPage, limit: 10 }));
+      onJobCardsChanged?.();
     }
   };
 
-  const handleEditSuccess = () => {
+  const handleEditSuccess = async () => {
     setEditDialogOpen(false);
     setJobCardToEdit(null);
-    dispatch(fetchJobCards({ page: currentPage, limit: 10 }));
+    await dispatch(fetchJobCards({ page: currentPage, limit: 10 }));
+    onJobCardsChanged?.();
   };
 
   const handleViewClick = (jobCard: JobCard, type: "tasks" | "expenses") => {
