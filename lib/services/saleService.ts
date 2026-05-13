@@ -5,6 +5,7 @@ import type {
   SaleInstallment,
   PaginatedResponse,
   PaginationOptions,
+  UnpaidSalesTotals,
 } from "../types";
 
 export type CreateSaleItemData = Omit<
@@ -87,11 +88,19 @@ export async function getAllSales(
   if (options?.limit) {
     params.append("limit", options.limit.toString());
   }
+  if (options?.search?.trim()) {
+    params.append("search", options.search.trim());
+  }
 
   const queryString = params.toString();
   const url = `/sales${queryString ? `?${queryString}` : ""}`;
 
   const response = await api.get<PaginatedResponse<Sale>>(url);
+  return response.data;
+}
+
+export async function getUnpaidSalesTotals(): Promise<UnpaidSalesTotals> {
+  const response = await api.get<UnpaidSalesTotals>("/sales/unpaid-totals");
   return response.data;
 }
 
@@ -177,6 +186,7 @@ export async function deleteSaleInstallment(id: string): Promise<void> {
 
 export const saleService = {
   getAll: getAllSales,
+  getUnpaidTotals: getUnpaidSalesTotals,
   getById: getSaleById,
   getBySaleNumber: getSaleBySaleNumber,
   create: createSale,

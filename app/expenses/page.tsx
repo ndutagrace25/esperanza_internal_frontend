@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { ExpensesTable } from "@/components/expenses/ExpensesTable";
+import { ExpenseUnpaidSummary } from "@/components/expenses/ExpenseUnpaidSummary";
 import { CreateExpenseDialog } from "@/components/expenses/CreateExpenseDialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -53,6 +54,11 @@ export default function ExpensesPage() {
   const [categoryFilter, setCategoryFilter] = useState<string>("ALL");
   const [submittedByFilter, setSubmittedByFilter] = useState<string>("ALL");
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [summaryRefreshKey, setSummaryRefreshKey] = useState(0);
+
+  const bumpExpenseSummary = useCallback(() => {
+    setSummaryRefreshKey((k) => k + 1);
+  }, []);
 
   // Debounce search term to avoid too many API calls
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
@@ -84,7 +90,7 @@ export default function ExpensesPage() {
       options.search = debouncedSearchTerm.trim();
     }
 
-    dispatch(fetchExpenses(options));
+    return dispatch(fetchExpenses(options));
   }, [
     dispatch,
     currentPage,
@@ -160,6 +166,8 @@ export default function ExpensesPage() {
             </AlertDescription>
           </Alert>
         )}
+
+        <ExpenseUnpaidSummary refreshKey={summaryRefreshKey} />
 
         {/* Filters */}
         <div className="space-y-3">
@@ -360,6 +368,8 @@ export default function ExpensesPage() {
             currentPage={currentPage}
             onPageChange={setCurrentPage}
             isLoading={isLoading}
+            refetchExpenses={fetchWithFilters}
+            onExpensesChanged={bumpExpenseSummary}
           />
         )}
 
@@ -369,7 +379,8 @@ export default function ExpensesPage() {
           onOpenChange={setIsCreateDialogOpen}
           onSuccess={() => {
             setIsCreateDialogOpen(false);
-            dispatch(fetchExpenses({ page: currentPage, limit: 10 }));
+            void fetchWithFilters();
+            bumpExpenseSummary();
           }}
         />
       </div>

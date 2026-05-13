@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useAppDispatch } from "@/lib/hooks";
-import { deleteSale, fetchSales } from "@/lib/slices/saleSlice";
+import { deleteSale } from "@/lib/slices/saleSlice";
 import {
   Table,
   TableBody,
@@ -377,6 +377,8 @@ interface SalesTableProps {
   currentPage: number;
   onPageChange: (page: number) => void;
   isLoading: boolean;
+  refetchSales: () => void | Promise<unknown>;
+  onSalesChanged?: () => void;
 }
 
 export function SalesTable({
@@ -385,6 +387,8 @@ export function SalesTable({
   currentPage,
   onPageChange,
   isLoading,
+  refetchSales,
+  onSalesChanged,
 }: SalesTableProps) {
   const dispatch = useAppDispatch();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -410,14 +414,16 @@ export function SalesTable({
       await dispatch(deleteSale(saleToDelete.id));
       setDeleteDialogOpen(false);
       setSaleToDelete(null);
-      dispatch(fetchSales({ page: currentPage, limit: 10 }));
+      await Promise.resolve(refetchSales());
+      onSalesChanged?.();
     }
   };
 
-  const handleEditSuccess = () => {
+  const handleEditSuccess = async () => {
     setEditDialogOpen(false);
     setSaleToEdit(null);
-    dispatch(fetchSales({ page: currentPage, limit: 10 }));
+    await Promise.resolve(refetchSales());
+    onSalesChanged?.();
   };
 
   const handleViewClick = (sale: Sale) => {
@@ -709,9 +715,10 @@ export function SalesTable({
               sale={saleToView}
               formatCurrency={formatCurrency}
               formatDate={formatDate}
-              onSaleUpdated={(updated) => {
+              onSaleUpdated={async (updated) => {
                 setSaleToView(updated);
-                dispatch(fetchSales({ page: currentPage, limit: 10 }));
+                await Promise.resolve(refetchSales());
+                onSalesChanged?.();
               }}
               initialOpenAddPayment={viewDialogOpenAddPayment}
             />

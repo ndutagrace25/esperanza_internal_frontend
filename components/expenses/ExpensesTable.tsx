@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import {
-  fetchExpenses,
   approveExpense,
   markExpenseAsPaid,
   rejectExpense,
@@ -70,6 +69,8 @@ interface ExpensesTableProps {
   currentPage: number;
   onPageChange: (page: number) => void;
   isLoading: boolean;
+  refetchExpenses: () => void | Promise<unknown>;
+  onExpensesChanged?: () => void;
 }
 
 export function ExpensesTable({
@@ -78,6 +79,8 @@ export function ExpensesTable({
   currentPage,
   onPageChange,
   isLoading,
+  refetchExpenses,
+  onExpensesChanged,
 }: ExpensesTableProps) {
   const dispatch = useAppDispatch();
   const { employee } = useAppSelector((state) => state.auth);
@@ -118,7 +121,8 @@ export function ExpensesTable({
       await dispatch(approveExpense(confirmAction.expense.id));
       setConfirmDialogOpen(false);
       setConfirmAction(null);
-      dispatch(fetchExpenses({ page: currentPage, limit: 10 }));
+      await Promise.resolve(refetchExpenses());
+      onExpensesChanged?.();
     }
   };
 
@@ -127,7 +131,8 @@ export function ExpensesTable({
       await dispatch(markExpenseAsPaid(confirmAction.expense.id));
       setConfirmDialogOpen(false);
       setConfirmAction(null);
-      dispatch(fetchExpenses({ page: currentPage, limit: 10 }));
+      await Promise.resolve(refetchExpenses());
+      onExpensesChanged?.();
     }
   };
 
@@ -136,7 +141,8 @@ export function ExpensesTable({
       await dispatch(cancelExpense(confirmAction.expense.id));
       setConfirmDialogOpen(false);
       setConfirmAction(null);
-      dispatch(fetchExpenses({ page: currentPage, limit: 10 }));
+      await Promise.resolve(refetchExpenses());
+      onExpensesChanged?.();
     }
   };
 
@@ -151,14 +157,16 @@ export function ExpensesTable({
       setRejectDialogOpen(false);
       setExpenseToReject(null);
       setRejectionReason("");
-      dispatch(fetchExpenses({ page: currentPage, limit: 10 }));
+      await Promise.resolve(refetchExpenses());
+      onExpensesChanged?.();
     }
   };
 
-  const handleEditSuccess = () => {
+  const handleEditSuccess = async () => {
     setEditDialogOpen(false);
     setExpenseToEdit(null);
-    dispatch(fetchExpenses({ page: currentPage, limit: 10 }));
+    await Promise.resolve(refetchExpenses());
+    onExpensesChanged?.();
   };
 
   // Returns custom class names for status badges - text color only

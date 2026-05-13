@@ -51,6 +51,8 @@ export type ResetPasswordData = {
 export type PaginationOptions = {
   page?: number;
   limit?: number;
+  /** Server-side search: sale number, client, product name/SKU */
+  search?: string;
 };
 
 export type PaginatedResponse<T> = {
@@ -282,6 +284,13 @@ export type Sale = {
   updatedAt: string;
 };
 
+export type UnpaidSalesTotals = {
+  saleCount: number;
+  /** Sum of paidAmount on sales that still have a balance */
+  totalPaid: string;
+  totalOutstanding: string;
+};
+
 // Expense Category types
 export type ExpenseCategory = {
   id: string;
@@ -358,6 +367,36 @@ export type Expense = {
   rejectionReason: string | null;
   createdAt: string;
   updatedAt: string;
+};
+
+export type UnpaidExpenseSummaryEmployee = {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+};
+
+export type UnpaidExpenseSummaryStatusRow = {
+  status: ExpenseStatus;
+  expenseCount: number;
+  totalAmount: string;
+};
+
+export type UnpaidExpenseSummaryByEmployeeRow = {
+  employee: UnpaidExpenseSummaryEmployee | null;
+  byStatus: UnpaidExpenseSummaryStatusRow[];
+  totals: {
+    expenseCount: number;
+    totalAmount: string;
+  };
+};
+
+export type UnpaidExpenseSummary = {
+  byEmployee: UnpaidExpenseSummaryByEmployeeRow[];
+  totals: {
+    expenseCount: number;
+    totalAmount: string;
+  };
 };
 
 // API Error types

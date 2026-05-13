@@ -5,6 +5,7 @@ import type {
   ExpenseStatus,
   PaymentMethod,
   PaginatedResponse,
+  UnpaidExpenseSummary,
 } from "../types";
 
 export type ExpensePaginationOptions = {
@@ -87,6 +88,23 @@ export async function getAllExpenses(
   return response.data;
 }
 
+export async function getUnpaidExpenseSummary(options?: {
+  startDate?: string;
+  endDate?: string;
+}): Promise<UnpaidExpenseSummary> {
+  const params = new URLSearchParams();
+  if (options?.startDate) {
+    params.append("startDate", options.startDate);
+  }
+  if (options?.endDate) {
+    params.append("endDate", options.endDate);
+  }
+  const qs = params.toString();
+  const url = `/expenses/summary${qs ? `?${qs}` : ""}`;
+  const response = await api.get<UnpaidExpenseSummary>(url);
+  return response.data;
+}
+
 // Get expense by ID
 export async function getExpenseById(id: string): Promise<Expense> {
   const response = await api.get<Expense>(`/expenses/${id}`);
@@ -156,6 +174,7 @@ export const expenseService = {
   getAllCategories: getAllExpenseCategories,
   getCategoryById: getExpenseCategoryById,
   getAll: getAllExpenses,
+  getUnpaidSummary: getUnpaidExpenseSummary,
   getById: getExpenseById,
   getByNumber: getExpenseByNumber,
   create: createExpense,
