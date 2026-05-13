@@ -89,6 +89,7 @@ export function SalesUnpaidTotalsCard({
   const nothingOutstanding =
     data.saleCount === 0 && Number(data.totalOutstanding) === 0;
   const hasCollected = Number(data.totalPaid) > 0;
+  const salesTotal = data.totalSalesAmount;
 
   return (
     <Card className="overflow-hidden">
@@ -123,7 +124,7 @@ export function SalesUnpaidTotalsCard({
             </p>
           ) : (
             <div className="space-y-4">
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                 <div className="flex flex-col gap-0.5">
                   <span className="text-sm font-medium text-muted-foreground">
                     Collected so far
@@ -142,6 +143,17 @@ export function SalesUnpaidTotalsCard({
                   </span>
                   <span className="text-xl font-semibold tabular-nums tracking-tight sm:text-2xl">
                     {formatCurrency(data.totalOutstanding)}
+                  </span>
+                </div>
+                <div className="flex flex-col gap-0.5 sm:border-l sm:border-border sm:pl-4">
+                  <span className="text-sm font-medium text-muted-foreground">
+                    Sales total
+                  </span>
+                  <span className="text-xl font-semibold tabular-nums tracking-tight sm:text-2xl">
+                    {formatCurrency(salesTotal)}
+                  </span>
+                  <span className="text-xs text-muted-foreground">
+                    Collected so far plus total still owed
                   </span>
                 </div>
               </div>

@@ -83,6 +83,7 @@ export type Client = {
   backendBaseUrl: string | null;
   apiUserName: string | null;
   apiPassword: string | null;
+  reminderSms: boolean;
   status: string;
   notes: string | null;
   broughtInById: string | null;
@@ -291,6 +292,8 @@ export type UnpaidSalesTotals = {
   totalPaid: string;
   /** Balance owed only on non-cancelled sales */
   totalOutstanding: string;
+  /** Collected so far plus total still owed (same figures as shown above) */
+  totalSalesAmount: string;
 };
 
 // Expense Category types

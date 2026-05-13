@@ -21,7 +21,9 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
+  FormControl,
 } from "@/components/ui/form";
+import { Checkbox } from "@/components/ui/checkbox";
 import Select from "react-select";
 import { Loader2 } from "lucide-react";
 import { useEmployees } from "@/lib/hooks/useEmployees";
@@ -69,6 +71,7 @@ export function CreateClientDialog({
       backendBaseUrl: undefined,
       apiUserName: undefined,
       apiPassword: undefined,
+      reminderSms: true,
       status: "active",
       notes: undefined,
       assignedToId: undefined,
@@ -266,6 +269,31 @@ export function CreateClientDialog({
                 )}
               />
             </div>
+
+            <FormField
+              control={form.control}
+              name="reminderSms"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-start gap-3 space-y-0 rounded-md border p-4">
+                  <FormControl>
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                      disabled={isLoading}
+                    />
+                  </FormControl>
+                  <div className="space-y-1 leading-none">
+                    <FormLabel className="font-normal cursor-pointer">
+                      Payment reminder SMS
+                    </FormLabel>
+                    <p className="text-sm text-muted-foreground">
+                      Subscription and payment-extension reminders only. Other
+                      messages (e.g. promotions) can use separate settings later.
+                    </p>
+                  </div>
+                </FormItem>
+              )}
+            />
 
             <FormField
               control={form.control}
