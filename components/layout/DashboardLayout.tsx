@@ -15,6 +15,7 @@ import {
   Menu,
   Package,
   Plug,
+  KeyRound,
   ShoppingCart,
   Users,
 } from "lucide-react";
@@ -27,6 +28,7 @@ const allMenuItems = [
   { name: "Employees", icon: Users, href: "/employees" },
   { name: "Clients", icon: Briefcase, href: "/clients" },
   { name: "Client Integrations", icon: Plug, href: "/client-integrations" },
+  { name: "Client Subscriptions", icon: KeyRound, href: "/client-subscriptions" },
   { name: "Product Categories", icon: FolderTree, href: "/product-categories" },
   { name: "Products", icon: Package, href: "/products" },
   { name: "Job Cards", icon: FileText, href: "/job-cards" },

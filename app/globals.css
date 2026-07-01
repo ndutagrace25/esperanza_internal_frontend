@@ -67,3 +67,8 @@
     font-family: var(--font-montserrat), Arial, Helvetica, sans-serif;
   }
 }
+
+/* Above Radix dialog overlay (z-50) so SweetAlert OK is clickable */
+.swal2-container {
+  z-index: 99999 !important;
+}

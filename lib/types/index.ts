@@ -120,6 +120,29 @@ export type ClientIntegration = {
   updatedAt: string;
 };
 
+export type ClientSubscriptionStatus =
+  | "active"
+  | "expired"
+  | "suspended"
+  | "cancelled";
+
+export type ClientSubscription = {
+  id: string;
+  clientId: string;
+  client: {
+    id: string;
+    companyName: string;
+    contactPerson: string | null;
+    email: string | null;
+  };
+  code: string;
+  apiBaseUrl: string;
+  expiryDate: string;
+  status: ClientSubscriptionStatus;
+  createdAt: string;
+  updatedAt: string;
+};
+
 // Product Category types
 export type ProductCategory = {
   id: string;
