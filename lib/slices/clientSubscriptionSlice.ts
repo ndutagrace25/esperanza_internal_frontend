@@ -1,6 +1,7 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { clientSubscriptionService } from "../services/clientSubscriptionService";
 import type { ClientSubscription } from "../types";
+import { sortByExpiryDate } from "../utils/subscriptionExpiry";
 import type {
   CreateClientSubscriptionData,
   RenewClientSubscriptionData,
@@ -110,7 +111,7 @@ const clientSubscriptionSlice = createSlice({
       })
       .addCase(fetchClientSubscriptions.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.subscriptions = action.payload;
+        state.subscriptions = sortByExpiryDate(action.payload);
       })
       .addCase(fetchClientSubscriptions.rejected, (state, action) => {
         state.isLoading = false;
@@ -144,6 +145,7 @@ const clientSubscriptionSlice = createSlice({
           (s) => s.id === action.payload.id
         );
         if (idx !== -1) state.subscriptions[idx] = action.payload;
+        state.subscriptions = sortByExpiryDate(state.subscriptions);
       })
       .addCase(updateClientSubscription.rejected, (state, action) => {
         state.isLoading = false;
@@ -162,6 +164,7 @@ const clientSubscriptionSlice = createSlice({
           (s) => s.id === action.payload.id
         );
         if (idx !== -1) state.subscriptions[idx] = action.payload;
+        state.subscriptions = sortByExpiryDate(state.subscriptions);
       })
       .addCase(renewClientSubscription.rejected, (state, action) => {
         state.isLoading = false;

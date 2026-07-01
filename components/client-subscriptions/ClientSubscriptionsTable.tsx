@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   Table,
   TableBody,
@@ -14,6 +14,7 @@ import type { ClientSubscription } from "@/lib/types";
 import {
   expiryDateClassName,
   getExpiryUrgency,
+  sortByExpiryDate,
 } from "@/lib/utils/subscriptionExpiry";
 import moment from "moment";
 
@@ -29,12 +30,17 @@ export function ClientSubscriptionsTable({
   const [renewOpen, setRenewOpen] = useState(false);
   const [selected, setSelected] = useState<ClientSubscription | null>(null);
 
+  const sortedSubscriptions = useMemo(
+    () => sortByExpiryDate(subscriptions),
+    [subscriptions]
+  );
+
   const openRenew = (sub: ClientSubscription) => {
     setSelected(sub);
     setRenewOpen(true);
   };
 
-  if (subscriptions.length === 0) {
+  if (sortedSubscriptions.length === 0) {
     return null;
   }
 
@@ -50,7 +56,7 @@ export function ClientSubscriptionsTable({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {subscriptions.map((sub) => {
+              {sortedSubscriptions.map((sub) => {
                 const urgency = getExpiryUrgency(sub.expiryDate);
                 const canRenew = sub.status !== "cancelled";
                 return (

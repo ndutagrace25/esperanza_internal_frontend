@@ -24,6 +24,15 @@ export function expiryDateClassName(urgency: ExpiryUrgency): string {
   }
 }
 
+/** Earliest expiry first (e.g. 2026-09-08 before 2026-09-09). */
+export function compareByExpiryDate(a: string, b: string): number {
+  return moment(a).startOf("day").valueOf() - moment(b).startOf("day").valueOf();
+}
+
+export function sortByExpiryDate<T extends { expiryDate: string }>(items: T[]): T[] {
+  return [...items].sort((a, b) => compareByExpiryDate(a.expiryDate, b.expiryDate));
+}
+
 export function isExpiryInRange(
   expiryDate: string,
   from?: string,
