@@ -55,8 +55,8 @@ export function RenewClientSubscriptionDialog({
         })
       ).unwrap();
       const alert = {
-        title: "Subscription updated",
-        text: `${subscription.client.companyName} expiry updated to ${moment(licenseExpiryDate).format("MMM D, YYYY")}.`,
+        title: "Subscription renewed",
+        text: `${subscription.client.companyName} system and local expiry updated to ${moment(licenseExpiryDate).format("MMM D, YYYY")}.`,
       };
       onSuccess();
       await showSuccessAlert(alert);
@@ -77,7 +77,8 @@ export function RenewClientSubscriptionDialog({
         <DialogHeader>
           <DialogTitle>Update expiry</DialogTitle>
           <DialogDescription>
-            Set a new expiry date for {subscription.client.companyName}.
+            Updates {subscription.client.companyName}&apos;s system and this
+            record with a new expiry date.
           </DialogDescription>
         </DialogHeader>
 
