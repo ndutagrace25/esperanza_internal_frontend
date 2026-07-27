@@ -2,6 +2,7 @@ import api from "../api";
 import type {
   Expense,
   ExpenseCategory,
+  ExpensePayment,
   ExpenseStatus,
   PaymentMethod,
   PaginatedResponse,
@@ -35,6 +36,14 @@ export type CreateExpenseData = {
 
 export type UpdateExpenseData = Partial<CreateExpenseData> & {
   status?: ExpenseStatus;
+};
+
+export type RecordPaymentData = {
+  amount: string | number;
+  paymentMethod?: PaymentMethod | null;
+  referenceNumber?: string | null;
+  paymentDate?: string;
+  notes?: string | null;
 };
 
 // Get all expense categories
@@ -166,6 +175,34 @@ export async function markExpenseAsPaid(id: string): Promise<Expense> {
   return response.data;
 }
 
+// Get payments recorded against an expense
+export async function getExpensePayments(
+  id: string
+): Promise<ExpensePayment[]> {
+  const response = await api.get<ExpensePayment[]>(`/expenses/${id}/payments`);
+  return response.data;
+}
+
+// Record a payment (full or partial) against an expense
+export async function recordExpensePayment(
+  id: string,
+  data: RecordPaymentData
+): Promise<Expense> {
+  const response = await api.post<Expense>(`/expenses/${id}/payments`, data);
+  return response.data;
+}
+
+// Delete a recorded payment
+export async function deleteExpensePayment(
+  expenseId: string,
+  paymentId: string
+): Promise<Expense> {
+  const response = await api.delete<Expense>(
+    `/expenses/${expenseId}/payments/${paymentId}`
+  );
+  return response.data;
+}
+
 // Reject expense
 export async function rejectExpense(
   id: string,
@@ -200,6 +237,9 @@ export const expenseService = {
   update: updateExpense,
   approve: approveExpense,
   markAsPaid: markExpenseAsPaid,
+  getPayments: getExpensePayments,
+  recordPayment: recordExpensePayment,
+  deletePayment: deleteExpensePayment,
   reject: rejectExpense,
   cancel: cancelExpense,
   delete: deleteExpense,

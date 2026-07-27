@@ -405,6 +405,7 @@ export function EditExpenseDialog({
                     { value: "DRAFT", label: "Draft" },
                     { value: "PENDING", label: "Pending Approval" },
                     { value: "APPROVED", label: "Approved" },
+                    { value: "PARTIALLY_PAID", label: "Partially Paid" },
                     { value: "PAID", label: "Paid" },
                     { value: "REJECTED", label: "Rejected" },
                     { value: "CANCELLED", label: "Cancelled" },
@@ -418,7 +419,12 @@ export function EditExpenseDialog({
                         value={statusOptions.find((opt) => opt.value === field.value) || null}
                         onChange={(option) => field.onChange(option?.value || null)}
                         placeholder="Select status"
-                        isDisabled={isLoading || expense.status === "PAID" || expense.status === "CANCELLED"}
+                        isDisabled={
+                          isLoading ||
+                          expense.status === "PAID" ||
+                          expense.status === "CANCELLED" ||
+                          expense.status === "PARTIALLY_PAID"
+                        }
                         isClearable={false}
                         isSearchable
                         styles={{

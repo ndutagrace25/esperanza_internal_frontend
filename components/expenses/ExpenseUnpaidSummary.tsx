@@ -25,6 +25,8 @@ function statusBadgeClass(status: ExpenseStatus) {
   switch (status) {
     case "APPROVED":
       return "bg-transparent text-blue-600 border-blue-300 dark:text-blue-400 dark:border-blue-700";
+    case "PARTIALLY_PAID":
+      return "bg-transparent text-teal-600 border-teal-300 dark:text-teal-400 dark:border-teal-700";
     case "PENDING":
       return "bg-transparent text-amber-600 border-amber-300 dark:text-amber-400 dark:border-amber-700";
     case "DRAFT":
@@ -42,6 +44,8 @@ function statusLabel(status: ExpenseStatus) {
       return "Pending";
     case "APPROVED":
       return "Approved";
+    case "PARTIALLY_PAID":
+      return "Partially Paid";
     default:
       return status;
   }
@@ -60,9 +64,14 @@ function rowKey(row: UnpaidExpenseSummary["byEmployee"][0]) {
 
 type ExpenseUnpaidSummaryProps = {
   refreshKey: number;
+  /** Called alongside the summary's own reload so the page's expense list refetches too */
+  onRefresh?: () => void;
 };
 
-export function ExpenseUnpaidSummary({ refreshKey }: ExpenseUnpaidSummaryProps) {
+export function ExpenseUnpaidSummary({
+  refreshKey,
+  onRefresh,
+}: ExpenseUnpaidSummaryProps) {
   const [data, setData] = useState<UnpaidExpenseSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -104,7 +113,10 @@ export function ExpenseUnpaidSummary({ refreshKey }: ExpenseUnpaidSummaryProps) 
           <Button
             variant="outline"
             size="sm"
-            onClick={() => void load()}
+            onClick={() => {
+              void load();
+              onRefresh?.();
+            }}
             className="shrink-0 w-full sm:w-auto"
           >
             <RefreshCw className="mr-2 h-4 w-4" />
@@ -138,7 +150,10 @@ export function ExpenseUnpaidSummary({ refreshKey }: ExpenseUnpaidSummaryProps) 
           <Button
             variant="outline"
             size="sm"
-            onClick={() => void load()}
+            onClick={() => {
+              void load();
+              onRefresh?.();
+            }}
             disabled={loading}
             className="w-full shrink-0 sm:w-auto"
           >

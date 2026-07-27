@@ -32,10 +32,12 @@ interface SelectOption {
 import { Loader2, Plus, Trash2 } from "lucide-react";
 import { useClients } from "@/lib/hooks/useClients";
 import { useProducts } from "@/lib/hooks/useProducts";
+import { useSalesPeople } from "@/lib/hooks/useSalesPeople";
 import type {
   CreateSaleData,
   CreateSaleItemData,
 } from "@/lib/services/saleService";
+import type { CommissionType } from "@/lib/types";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -62,6 +64,11 @@ export function CreateSaleDialog({
     isLoading: productsLoading,
     error: productsError,
   } = useProducts();
+  const {
+    salesPeople,
+    isLoading: salesPeopleLoading,
+    error: salesPeopleError,
+  } = useSalesPeople();
   const [isLoading, setIsLoading] = useState(false);
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
 
@@ -88,8 +95,13 @@ export function CreateSaleDialog({
       notes: undefined,
       requestedPaymentDateExtension: false,
       paymentExtensionDueDate: undefined,
+      commissionSalesPersonId: undefined,
+      commissionType: undefined,
+      commissionRate: undefined,
     },
   });
+
+  const commissionSalesPersonIdValue = form.watch("commissionSalesPersonId");
 
   const onSubmit = async (data: CreateSaleData) => {
     // Clear previous validation errors
@@ -115,6 +127,22 @@ export function CreateSaleDialog({
         errors.push(`Item ${index + 1}: Unit price must be greater than 0`);
       }
     });
+
+    // Validate commission fields (all-or-nothing)
+    if (data.commissionSalesPersonId) {
+      if (!data.commissionType) {
+        errors.push("Commission type is required when a sales person is selected");
+      }
+      if (data.commissionRate == null || Number(data.commissionRate) <= 0) {
+        errors.push("Commission value must be greater than zero");
+      }
+      if (
+        data.commissionType === "PERCENTAGE" &&
+        Number(data.commissionRate) > 100
+      ) {
+        errors.push("Commission percentage cannot exceed 100");
+      }
+    }
 
     // Validate first installment if provided
     const firstAmount = firstInstallmentAmount.trim()
@@ -156,6 +184,13 @@ export function CreateSaleDialog({
           data.paymentExtensionDueDate.trim() !== ""
             ? new Date(data.paymentExtensionDueDate).toISOString()
             : undefined,
+        commissionSalesPersonId: data.commissionSalesPersonId || null,
+        commissionType: data.commissionSalesPersonId
+          ? data.commissionType || null
+          : null,
+        commissionRate: data.commissionSalesPersonId
+          ? data.commissionRate || null
+          : null,
       };
 
       // Prepare items data
@@ -264,10 +299,10 @@ export function CreateSaleDialog({
             Fill in the details to create a new sale.
           </DialogDescription>
         </DialogHeader>
-        {(clientsError || productsError) && (
+        {(clientsError || productsError || salesPeopleError) && (
           <Alert variant="destructive" className="mx-6">
             <AlertDescription className="font-medium text-red-500">
-              {clientsError || productsError}
+              {clientsError || productsError || salesPeopleError}
             </AlertDescription>
           </Alert>
         )}
@@ -460,6 +495,125 @@ export function CreateSaleDialog({
                     </FormItem>
                   )}
                 />
+              )}
+            </div>
+
+            {/* Commission (optional) */}
+            <div className="space-y-4">
+              <FormField
+                control={form.control}
+                name="commissionSalesPersonId"
+                render={({ field }) => {
+                  const salesPersonOptions: SelectOption[] = salesPeople.map(
+                    (sp) => ({
+                      value: sp.id,
+                      label: sp.employee
+                        ? `${sp.name} (${sp.employee.firstName} ${sp.employee.lastName})`
+                        : sp.name,
+                    })
+                  );
+                  return (
+                    <FormItem>
+                      <FormLabel>Sales Person (commission)</FormLabel>
+                      <Select<SelectOption>
+                        instanceId="sale-salesperson-select"
+                        options={salesPersonOptions}
+                        value={
+                          salesPersonOptions.find(
+                            (opt) => opt.value === field.value
+                          ) || null
+                        }
+                        onChange={(option) => {
+                          field.onChange(option?.value || null);
+                          if (!option) {
+                            form.setValue("commissionType", null);
+                            form.setValue("commissionRate", null);
+                          }
+                        }}
+                        placeholder="Who earns commission on this sale?"
+                        isDisabled={isLoading || salesPeopleLoading}
+                        isLoading={salesPeopleLoading}
+                        isClearable
+                        isSearchable
+                        styles={{
+                          control: (base) => ({ ...base, minHeight: "44px" }),
+                          menu: (base) => ({ ...base, zIndex: 9999 }),
+                        }}
+                      />
+                      <FormMessage />
+                    </FormItem>
+                  );
+                }}
+              />
+
+              {commissionSalesPersonIdValue && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="commissionType"
+                    render={({ field }) => {
+                      const commissionTypeOptions: SelectOption[] = [
+                        { value: "FIXED", label: "Fixed amount" },
+                        { value: "PERCENTAGE", label: "Percentage of sale" },
+                      ];
+                      return (
+                        <FormItem>
+                          <FormLabel>Commission Type</FormLabel>
+                          <Select<SelectOption>
+                            instanceId="sale-commission-type-select"
+                            options={commissionTypeOptions}
+                            value={
+                              commissionTypeOptions.find(
+                                (opt) => opt.value === field.value
+                              ) || null
+                            }
+                            onChange={(option) =>
+                              field.onChange(
+                                (option?.value as CommissionType) || null
+                              )
+                            }
+                            placeholder="Fixed or percentage"
+                            isDisabled={isLoading}
+                            isClearable
+                            isSearchable
+                            styles={{
+                              control: (base) => ({ ...base, minHeight: "44px" }),
+                              menu: (base) => ({ ...base, zIndex: 9999 }),
+                            }}
+                          />
+                          <FormMessage />
+                        </FormItem>
+                      );
+                    }}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="commissionRate"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>
+                          Commission Value{" "}
+                          {form.watch("commissionType") === "PERCENTAGE"
+                            ? "(%)"
+                            : "(KES)"}
+                        </FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            step="0.01"
+                            placeholder="e.g. 5"
+                            disabled={isLoading}
+                            className="h-11"
+                            {...field}
+                            value={field.value ?? ""}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
               )}
             </div>
 

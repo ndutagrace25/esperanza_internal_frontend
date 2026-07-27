@@ -66,6 +66,27 @@ export type PaginatedResponse<T> = {
 };
 
 // Client types
+export type CommissionType = "FIXED" | "PERCENTAGE";
+
+// A person credited with sales commission — staff (linked to an Employee) or external
+export type SalesPerson = {
+  id: string;
+  name: string;
+  phone: string | null;
+  email: string | null;
+  notes: string | null;
+  employeeId: string | null;
+  employee: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+  } | null;
+  status: "active" | "inactive";
+  createdAt: string;
+  updatedAt: string;
+};
+
 export type Client = {
   id: string;
   companyName: string;
@@ -247,6 +268,12 @@ export type JobCard = {
   tasks: JobTask[];
   expenses: JobExpense[];
   approvals: JobCardApproval[];
+  /** Aggregate payment status of this job card's linked formal expense claims */
+  expensePaymentStatus: "NONE" | "UNPAID" | "PARTIALLY_PAID" | "PAID";
+  /** Aggregate approval status of this job card's linked formal expense claims */
+  expenseApprovalStatus: "NONE" | "PENDING" | "APPROVED";
+  /** True once any linked expense has passed approval; staff can no longer edit */
+  staffEditLocked: boolean;
   createdAt: string;
   updatedAt: string;
 };
@@ -302,10 +329,79 @@ export type Sale = {
   notes: string | null;
   requestedPaymentDateExtension?: boolean;
   paymentExtensionDueDate?: string | null;
+  commissionSalesPersonId: string | null;
+  commissionSalesPerson: {
+    id: string;
+    name: string;
+    phone: string | null;
+    email: string | null;
+    status: string;
+  } | null;
+  commissionType: CommissionType | null;
+  commissionRate: string | null; // Decimal as string
+  commissionAmount: string; // Decimal as string
+  commissionPaidAmount: string; // Decimal as string
   items: SaleItem[];
   installments?: SaleInstallment[];
   createdAt: string;
   updatedAt: string;
+};
+
+export type SaleCommissionPayment = {
+  id: string;
+  saleId: string;
+  amount: string; // Decimal as string
+  paymentDate: string;
+  paymentMethod: PaymentMethod | null;
+  referenceNumber: string | null;
+  notes: string | null;
+  recordedById: string | null;
+  recordedBy: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+  } | null;
+  createdAt: string;
+};
+
+export type SaleAmountHistoryEntry = {
+  id: string;
+  saleId: string;
+  oldAmount: string; // Decimal as string
+  newAmount: string; // Decimal as string
+  changedById: string | null;
+  changedBy: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+  } | null;
+  createdAt: string;
+};
+
+export type CommissionSummaryRow = {
+  salesPerson: {
+    id: string;
+    name: string;
+    phone: string | null;
+    email: string | null;
+    status: string;
+  };
+  saleCount: number;
+  totalCommission: string;
+  totalPaid: string;
+  totalOutstanding: string;
+};
+
+export type CommissionSummary = {
+  bySalesPerson: CommissionSummaryRow[];
+  totals: {
+    saleCount: number;
+    totalCommission: string;
+    totalPaid: string;
+    totalOutstanding: string;
+  };
 };
 
 export type UnpaidSalesTotals = {
@@ -334,6 +430,7 @@ export type ExpenseStatus =
   | "DRAFT"
   | "PENDING"
   | "APPROVED"
+  | "PARTIALLY_PAID"
   | "PAID"
   | "REJECTED"
   | "CANCELLED";
@@ -357,6 +454,7 @@ export type Expense = {
   };
   description: string;
   amount: string; // Decimal as string
+  amountPaid: string; // Decimal as string
   expenseDate: string;
   vendor: string | null;
   referenceNumber: string | null;
@@ -395,6 +493,24 @@ export type Expense = {
   rejectionReason: string | null;
   createdAt: string;
   updatedAt: string;
+};
+
+export type ExpensePayment = {
+  id: string;
+  expenseId: string;
+  amount: string; // Decimal as string
+  paymentDate: string;
+  paymentMethod: PaymentMethod | null;
+  referenceNumber: string | null;
+  notes: string | null;
+  recordedById: string | null;
+  recordedBy: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+  } | null;
+  createdAt: string;
 };
 
 export type UnpaidExpenseSummaryEmployee = {

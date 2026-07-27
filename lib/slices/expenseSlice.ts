@@ -5,6 +5,7 @@ import type {
   ExpensePaginationOptions,
   CreateExpenseData,
   UpdateExpenseData,
+  RecordPaymentData,
 } from "../services/expenseService";
 
 // Initial state
@@ -173,6 +174,33 @@ export const markExpenseAsPaid = createAsyncThunk<
     });
   }
 });
+
+export const recordExpensePayment = createAsyncThunk<
+  Expense,
+  { id: string; data: RecordPaymentData },
+  { rejectValue: { error: string } }
+>(
+  "expense/recordExpensePayment",
+  async ({ id, data }, { rejectWithValue }) => {
+    try {
+      return await expenseService.recordPayment(id, data);
+    } catch (error: unknown) {
+      if (
+        error &&
+        typeof error === "object" &&
+        "response" in error &&
+        error.response &&
+        typeof error.response === "object" &&
+        "data" in error.response
+      ) {
+        return rejectWithValue(error.response.data as { error: string });
+      }
+      return rejectWithValue({
+        error: "Failed to record payment",
+      });
+    }
+  }
+);
 
 export const rejectExpense = createAsyncThunk<
   Expense,
@@ -379,6 +407,33 @@ const expenseSlice = createSlice({
         state.isLoading = false;
         state.error =
           action.payload?.error || "Failed to mark expense as paid";
+      });
+
+    // Record Payment
+    builder
+      .addCase(recordExpensePayment.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(recordExpensePayment.fulfilled, (state, action) => {
+        state.isLoading = false;
+        const index = state.expenses.findIndex(
+          (expense) => expense.id === action.payload.id
+        );
+        if (index !== -1) {
+          state.expenses[index] = action.payload;
+        }
+        if (
+          state.currentExpense &&
+          state.currentExpense.id === action.payload.id
+        ) {
+          state.currentExpense = action.payload;
+        }
+        state.error = null;
+      })
+      .addCase(recordExpensePayment.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload?.error || "Failed to record payment";
       });
 
     // Reject Expense

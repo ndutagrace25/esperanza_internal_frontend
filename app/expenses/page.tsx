@@ -167,7 +167,10 @@ export default function ExpensesPage() {
           </Alert>
         )}
 
-        <ExpenseUnpaidSummary refreshKey={summaryRefreshKey} />
+        <ExpenseUnpaidSummary
+          refreshKey={summaryRefreshKey}
+          onRefresh={fetchWithFilters}
+        />
 
         {/* Filters */}
         <div className="space-y-3">
@@ -204,6 +207,7 @@ export default function ExpensesPage() {
                   { value: "DRAFT", label: "Draft" },
                   { value: "PENDING", label: "Pending" },
                   { value: "APPROVED", label: "Approved" },
+                  { value: "PARTIALLY_PAID", label: "Partially Paid" },
                   { value: "PAID", label: "Paid" },
                   { value: "REJECTED", label: "Rejected" },
                   { value: "CANCELLED", label: "Cancelled" },
@@ -213,6 +217,7 @@ export default function ExpensesPage() {
                   { value: "DRAFT", label: "Draft" },
                   { value: "PENDING", label: "Pending" },
                   { value: "APPROVED", label: "Approved" },
+                  { value: "PARTIALLY_PAID", label: "Partially Paid" },
                   { value: "PAID", label: "Paid" },
                   { value: "REJECTED", label: "Rejected" },
                   { value: "CANCELLED", label: "Cancelled" },

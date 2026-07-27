@@ -22,10 +22,13 @@ function formatCurrency(amount: string) {
 
 type MyExpenseUnpaidSummaryCardProps = {
   refreshKey: number;
+  /** Called alongside the summary's own reload so the job cards list refetches too */
+  onRefresh?: () => void;
 };
 
 export function MyExpenseUnpaidSummaryCard({
   refreshKey,
+  onRefresh,
 }: MyExpenseUnpaidSummaryCardProps) {
   const [data, setData] = useState<MyUnpaidExpenseSummary | null>(null);
   const [loading, setLoading] = useState(true);
@@ -68,7 +71,10 @@ export function MyExpenseUnpaidSummaryCard({
           <Button
             variant="outline"
             size="sm"
-            onClick={() => void load()}
+            onClick={() => {
+              void load();
+              onRefresh?.();
+            }}
             className="shrink-0 w-full sm:w-auto"
           >
             <RefreshCw className="mr-2 h-4 w-4" />
@@ -99,7 +105,10 @@ export function MyExpenseUnpaidSummaryCard({
         <Button
           variant="outline"
           size="sm"
-          onClick={() => void load()}
+          onClick={() => {
+            void load();
+            onRefresh?.();
+          }}
           disabled={loading}
           className="w-full shrink-0 sm:w-auto"
         >

@@ -4,7 +4,6 @@ import { useState } from "react";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import {
   approveExpense,
-  markExpenseAsPaid,
   rejectExpense,
   cancelExpense,
 } from "@/lib/slices/expenseSlice";
@@ -36,6 +35,7 @@ import {
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { EditExpenseDialog } from "./EditExpenseDialog";
+import { RecordPaymentDialog } from "./RecordPaymentDialog";
 import {
   MoreVertical,
   Edit,
@@ -93,9 +93,11 @@ export function ExpensesTable({
   const [expenseToEdit, setExpenseToEdit] = useState<Expense | null>(null);
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const [confirmAction, setConfirmAction] = useState<{
-    type: "approve" | "pay" | "cancel";
+    type: "approve" | "cancel";
     expense: Expense;
   } | null>(null);
+  const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
+  const [expenseToPay, setExpenseToPay] = useState<Expense | null>(null);
 
   const handleEditClick = (expense: Expense) => {
     setExpenseToEdit(expense);
@@ -109,26 +111,28 @@ export function ExpensesTable({
   };
 
   const handleConfirmAction = (
-    type: "approve" | "pay" | "cancel",
+    type: "approve" | "cancel",
     expense: Expense
   ) => {
     setConfirmAction({ type, expense });
     setConfirmDialogOpen(true);
   };
 
+  const handlePayClick = (expense: Expense) => {
+    setExpenseToPay(expense);
+    setPaymentDialogOpen(true);
+  };
+
+  const handlePaymentSuccess = async () => {
+    setPaymentDialogOpen(false);
+    setExpenseToPay(null);
+    await Promise.resolve(refetchExpenses());
+    onExpensesChanged?.();
+  };
+
   const handleApprove = async () => {
     if (confirmAction?.expense) {
       await dispatch(approveExpense(confirmAction.expense.id));
-      setConfirmDialogOpen(false);
-      setConfirmAction(null);
-      await Promise.resolve(refetchExpenses());
-      onExpensesChanged?.();
-    }
-  };
-
-  const handleMarkAsPaid = async () => {
-    if (confirmAction?.expense) {
-      await dispatch(markExpenseAsPaid(confirmAction.expense.id));
       setConfirmDialogOpen(false);
       setConfirmAction(null);
       await Promise.resolve(refetchExpenses());
@@ -176,6 +180,8 @@ export function ExpensesTable({
         return "bg-transparent text-emerald-600 border-emerald-300 dark:text-emerald-400 dark:border-emerald-700";
       case "APPROVED":
         return "bg-transparent text-blue-600 border-blue-300 dark:text-blue-400 dark:border-blue-700";
+      case "PARTIALLY_PAID":
+        return "bg-transparent text-teal-600 border-teal-300 dark:text-teal-400 dark:border-teal-700";
       case "PENDING":
         return "bg-transparent text-amber-600 border-amber-300 dark:text-amber-400 dark:border-amber-700";
       case "DRAFT":
@@ -197,6 +203,8 @@ export function ExpensesTable({
         return "Pending";
       case "APPROVED":
         return "Approved";
+      case "PARTIALLY_PAID":
+        return "Partially Paid";
       case "PAID":
         return "Paid";
       case "REJECTED":
@@ -208,7 +216,7 @@ export function ExpensesTable({
     }
   };
 
-  const formatCurrency = (amount: string) => {
+  const formatCurrency = (amount: string | number) => {
     return `KES ${Number(amount).toLocaleString("en-KE", {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
@@ -223,8 +231,11 @@ export function ExpensesTable({
     return isDirector && expense.status === "PENDING";
   };
 
-  const canMarkAsPaid = (expense: Expense) => {
-    return isDirector && expense.status === "APPROVED";
+  const canRecordPayment = (expense: Expense) => {
+    return (
+      isDirector &&
+      (expense.status === "APPROVED" || expense.status === "PARTIALLY_PAID")
+    );
   };
 
   const canReject = (expense: Expense) => {
@@ -270,12 +281,10 @@ export function ExpensesTable({
               Approve
             </DropdownMenuItem>
           )}
-          {canMarkAsPaid(expense) && (
-            <DropdownMenuItem
-              onClick={() => handleConfirmAction("pay", expense)}
-            >
+          {canRecordPayment(expense) && (
+            <DropdownMenuItem onClick={() => handlePayClick(expense)}>
               <DollarSign className="mr-2 h-4 w-4" />
-              Mark as Paid
+              Record Payment
             </DropdownMenuItem>
           )}
           {canReject(expense) && (
@@ -343,8 +352,19 @@ export function ExpensesTable({
               </div>
 
               {/* Amount - Prominent Display */}
-              <div className="text-xl font-bold text-primary mb-3">
-                {formatCurrency(expense.amount)}
+              <div className="mb-3">
+                <div className="text-xl font-bold text-primary">
+                  {formatCurrency(expense.amount)}
+                </div>
+                {expense.status === "PARTIALLY_PAID" && (
+                  <div className="text-xs text-teal-600">
+                    {formatCurrency(expense.amountPaid)} paid ·{" "}
+                    {formatCurrency(
+                      Number(expense.amount) - Number(expense.amountPaid)
+                    )}{" "}
+                    remaining
+                  </div>
+                )}
               </div>
 
               {/* Details Grid */}
@@ -484,6 +504,14 @@ export function ExpensesTable({
                   <TableCell>{formatDate(expense.expenseDate)}</TableCell>
                   <TableCell className="text-right font-medium">
                     {formatCurrency(expense.amount)}
+                    {expense.status === "PARTIALLY_PAID" && (
+                      <div className="text-xs font-normal text-teal-600">
+                        {formatCurrency(
+                          Number(expense.amount) - Number(expense.amountPaid)
+                        )}{" "}
+                        remaining
+                      </div>
+                    )}
                   </TableCell>
                   <TableCell>
                     {expense.submittedBy ? (
@@ -563,14 +591,11 @@ export function ExpensesTable({
           <DialogHeader>
             <DialogTitle>
               {confirmAction?.type === "approve" && "Approve Expense"}
-              {confirmAction?.type === "pay" && "Mark as Paid"}
               {confirmAction?.type === "cancel" && "Cancel Expense"}
             </DialogTitle>
             <DialogDescription>
               {confirmAction?.type === "approve" &&
                 `Are you sure you want to approve expense ${confirmAction?.expense.expenseNumber}?`}
-              {confirmAction?.type === "pay" &&
-                `Are you sure you want to mark expense ${confirmAction?.expense.expenseNumber} as paid?`}
               {confirmAction?.type === "cancel" &&
                 `Are you sure you want to cancel expense ${confirmAction?.expense.expenseNumber}? This action cannot be undone.`}
             </DialogDescription>
@@ -586,12 +611,10 @@ export function ExpensesTable({
               variant={confirmAction?.type === "cancel" ? "destructive" : "default"}
               onClick={() => {
                 if (confirmAction?.type === "approve") handleApprove();
-                else if (confirmAction?.type === "pay") handleMarkAsPaid();
                 else if (confirmAction?.type === "cancel") handleCancel();
               }}
             >
               {confirmAction?.type === "approve" && "Yes, Approve"}
-              {confirmAction?.type === "pay" && "Yes, Mark as Paid"}
               {confirmAction?.type === "cancel" && "Yes, Cancel"}
             </Button>
           </DialogFooter>
@@ -641,6 +664,16 @@ export function ExpensesTable({
           onOpenChange={setEditDialogOpen}
           expense={expenseToEdit}
           onSuccess={handleEditSuccess}
+        />
+      )}
+
+      {/* Record Payment Dialog */}
+      {expenseToPay && (
+        <RecordPaymentDialog
+          open={paymentDialogOpen}
+          onOpenChange={setPaymentDialogOpen}
+          expense={expenseToPay}
+          onSuccess={handlePaymentSuccess}
         />
       )}
     </>

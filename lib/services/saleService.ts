@@ -3,6 +3,10 @@ import type {
   Sale,
   SaleItem,
   SaleInstallment,
+  SaleCommissionPayment,
+  SaleAmountHistoryEntry,
+  CommissionSummary,
+  PaymentMethod,
   PaginatedResponse,
   PaginationOptions,
   UnpaidSalesTotals,
@@ -37,10 +41,15 @@ export type CreateSaleData = Omit<
   | "paidAmount"
   | "completedAt"
   | "installments"
+  | "commissionSalesPersonId"
+  | "commissionSalesPerson"
+  | "commissionAmount"
+  | "commissionPaidAmount"
 > & {
   clientId: string;
   items?: CreateSaleItemData[];
   firstInstallment?: FirstInstallmentData;
+  commissionSalesPersonId?: string | null;
 };
 
 export type UpdateSaleData = Partial<
@@ -56,9 +65,22 @@ export type UpdateSaleData = Partial<
     | "paidAmount"
     | "completedAt"
     | "installments"
+    | "commissionSalesPersonId"
+    | "commissionSalesPerson"
+    | "commissionAmount"
+    | "commissionPaidAmount"
   >
 > & {
   clientId?: string;
+  commissionSalesPersonId?: string | null;
+};
+
+export type RecordCommissionPaymentData = {
+  amount: string | number;
+  paymentMethod?: PaymentMethod | null;
+  referenceNumber?: string | null;
+  paymentDate?: string;
+  notes?: string | null;
 };
 
 export type CreateSaleInstallmentData = {
@@ -184,6 +206,61 @@ export async function deleteSaleInstallment(id: string): Promise<void> {
   await api.delete(`/sales/installments/${id}`);
 }
 
+// Sale commission payments
+export async function getSaleCommissionPayments(
+  saleId: string
+): Promise<SaleCommissionPayment[]> {
+  const response = await api.get<SaleCommissionPayment[]>(
+    `/sales/${saleId}/commission-payments`
+  );
+  return response.data;
+}
+
+export async function recordSaleCommissionPayment(
+  saleId: string,
+  data: RecordCommissionPaymentData
+): Promise<Sale> {
+  const response = await api.post<Sale>(
+    `/sales/${saleId}/commission-payments`,
+    data
+  );
+  return response.data;
+}
+
+export async function deleteSaleCommissionPayment(
+  paymentId: string
+): Promise<Sale> {
+  const response = await api.delete<Sale>(
+    `/sales/commission-payments/${paymentId}`
+  );
+  return response.data;
+}
+
+// Sale amount history (audit trail of totalAmount changes)
+export async function getSaleAmountHistory(
+  saleId: string
+): Promise<SaleAmountHistoryEntry[]> {
+  const response = await api.get<SaleAmountHistoryEntry[]>(
+    `/sales/${saleId}/amount-history`
+  );
+  return response.data;
+}
+
+// Commission summary + per-salesperson drill-down
+export async function getCommissionSummary(): Promise<CommissionSummary> {
+  const response = await api.get<CommissionSummary>("/sales/commissions/summary");
+  return response.data;
+}
+
+export async function getSalesForSalesPerson(
+  salesPersonId: string
+): Promise<Sale[]> {
+  const response = await api.get<Sale[]>(
+    `/sales/commissions/by-sales-person/${salesPersonId}`
+  );
+  return response.data;
+}
+
 export const saleService = {
   getAll: getAllSales,
   getUnpaidTotals: getUnpaidSalesTotals,
@@ -198,4 +275,10 @@ export const saleService = {
   createInstallment: createSaleInstallment,
   updateInstallment: updateSaleInstallment,
   deleteInstallment: deleteSaleInstallment,
+  getCommissionPayments: getSaleCommissionPayments,
+  recordCommissionPayment: recordSaleCommissionPayment,
+  deleteCommissionPayment: deleteSaleCommissionPayment,
+  getAmountHistory: getSaleAmountHistory,
+  getCommissionSummary,
+  getSalesForSalesPerson,
 };

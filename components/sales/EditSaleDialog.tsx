@@ -29,10 +29,11 @@ interface SelectOption {
   value: string;
   label: string;
 }
-import { Loader2, Plus, Trash2 } from "lucide-react";
+import { History, Loader2, Plus, Trash2 } from "lucide-react";
 import { useClients } from "@/lib/hooks/useClients";
 import { useProducts } from "@/lib/hooks/useProducts";
-import type { Sale } from "@/lib/types";
+import { useSalesPeople } from "@/lib/hooks/useSalesPeople";
+import type { CommissionType, Sale, SaleAmountHistoryEntry } from "@/lib/types";
 import type {
   UpdateSaleData,
   UpdateSaleItemData,
@@ -41,7 +42,18 @@ import {
   createSaleItem,
   updateSaleItem,
   deleteSaleItem,
+  saleService,
 } from "@/lib/services/saleService";
+import { Badge } from "@/components/ui/badge";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import moment from "moment";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -70,6 +82,11 @@ export function EditSaleDialog({
     isLoading: productsLoading,
     error: productsError,
   } = useProducts();
+  const {
+    salesPeople,
+    isLoading: salesPeopleLoading,
+    error: salesPeopleError,
+  } = useSalesPeople();
   const [isLoading, setIsLoading] = useState(false);
 
   // Sale items state
@@ -95,6 +112,18 @@ export function EditSaleDialog({
   const [items, setItems] = useState<ItemItem[]>([]);
   const [deletedItemIds, setDeletedItemIds] = useState<string[]>([]);
 
+  const [amountHistory, setAmountHistory] = useState<SaleAmountHistoryEntry[]>(
+    []
+  );
+  const [showHistory, setShowHistory] = useState(false);
+
+  useEffect(() => {
+    saleService
+      .getAmountHistory(sale.id)
+      .then(setAmountHistory)
+      .catch(() => setAmountHistory([]));
+  }, [sale.id]);
+
   // Format dates for input fields
   const formatDateForInput = (dateString: string | null) => {
     if (!dateString) return "";
@@ -113,8 +142,13 @@ export function EditSaleDialog({
       paymentExtensionDueDate: sale.paymentExtensionDueDate
         ? formatDateForInput(sale.paymentExtensionDueDate)
         : undefined,
+      commissionSalesPersonId: sale.commissionSalesPersonId ?? undefined,
+      commissionType: sale.commissionType ?? undefined,
+      commissionRate: sale.commissionRate ?? undefined,
     },
   });
+
+  const commissionSalesPersonIdValue = form.watch("commissionSalesPersonId");
 
   // Update form and items when sale changes
   useEffect(() => {
@@ -129,6 +163,9 @@ export function EditSaleDialog({
         paymentExtensionDueDate: sale.paymentExtensionDueDate
           ? formatDateForInput(sale.paymentExtensionDueDate)
           : undefined,
+        commissionSalesPersonId: sale.commissionSalesPersonId ?? undefined,
+        commissionType: sale.commissionType ?? undefined,
+        commissionRate: sale.commissionRate ?? undefined,
       });
       // Load existing items
       setItems(sale.items || []);
@@ -159,6 +196,13 @@ export function EditSaleDialog({
           data.paymentExtensionDueDate.trim() !== ""
             ? new Date(data.paymentExtensionDueDate).toISOString()
             : null,
+        commissionSalesPersonId: data.commissionSalesPersonId || null,
+        commissionType: data.commissionSalesPersonId
+          ? data.commissionType || null
+          : null,
+        commissionRate: data.commissionSalesPersonId
+          ? data.commissionRate || null
+          : null,
       };
 
       // Update sale
@@ -308,10 +352,10 @@ export function EditSaleDialog({
           <DialogTitle>Edit Sale</DialogTitle>
           <DialogDescription>Update the sale details below.</DialogDescription>
         </DialogHeader>
-        {(clientsError || productsError) && (
+        {(clientsError || productsError || salesPeopleError) && (
           <Alert variant="destructive" className="mx-6">
             <AlertDescription className="font-medium text-red-500">
-              {clientsError || productsError}
+              {clientsError || productsError || salesPeopleError}
             </AlertDescription>
           </Alert>
         )}
@@ -490,6 +534,125 @@ export function EditSaleDialog({
                     </FormItem>
                   )}
                 />
+              )}
+            </div>
+
+            {/* Commission (optional) */}
+            <div className="space-y-4">
+              <FormField
+                control={form.control}
+                name="commissionSalesPersonId"
+                render={({ field }) => {
+                  const salesPersonOptions: SelectOption[] = salesPeople.map(
+                    (sp) => ({
+                      value: sp.id,
+                      label: sp.employee
+                        ? `${sp.name} (${sp.employee.firstName} ${sp.employee.lastName})`
+                        : sp.name,
+                    })
+                  );
+                  return (
+                    <FormItem>
+                      <FormLabel>Sales Person (commission)</FormLabel>
+                      <Select<SelectOption>
+                        instanceId="edit-sale-salesperson-select"
+                        options={salesPersonOptions}
+                        value={
+                          salesPersonOptions.find(
+                            (opt) => opt.value === field.value
+                          ) || null
+                        }
+                        onChange={(option) => {
+                          field.onChange(option?.value || null);
+                          if (!option) {
+                            form.setValue("commissionType", null);
+                            form.setValue("commissionRate", null);
+                          }
+                        }}
+                        placeholder="Who earns commission on this sale?"
+                        isDisabled={isLoading || salesPeopleLoading}
+                        isLoading={salesPeopleLoading}
+                        isClearable
+                        isSearchable
+                        styles={{
+                          control: (base) => ({ ...base, minHeight: "44px" }),
+                          menu: (base) => ({ ...base, zIndex: 9999 }),
+                        }}
+                      />
+                      <FormMessage />
+                    </FormItem>
+                  );
+                }}
+              />
+
+              {commissionSalesPersonIdValue && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="commissionType"
+                    render={({ field }) => {
+                      const commissionTypeOptions: SelectOption[] = [
+                        { value: "FIXED", label: "Fixed amount" },
+                        { value: "PERCENTAGE", label: "Percentage of sale" },
+                      ];
+                      return (
+                        <FormItem>
+                          <FormLabel>Commission Type</FormLabel>
+                          <Select<SelectOption>
+                            instanceId="edit-sale-commission-type-select"
+                            options={commissionTypeOptions}
+                            value={
+                              commissionTypeOptions.find(
+                                (opt) => opt.value === field.value
+                              ) || null
+                            }
+                            onChange={(option) =>
+                              field.onChange(
+                                (option?.value as CommissionType) || null
+                              )
+                            }
+                            placeholder="Fixed or percentage"
+                            isDisabled={isLoading}
+                            isClearable
+                            isSearchable
+                            styles={{
+                              control: (base) => ({ ...base, minHeight: "44px" }),
+                              menu: (base) => ({ ...base, zIndex: 9999 }),
+                            }}
+                          />
+                          <FormMessage />
+                        </FormItem>
+                      );
+                    }}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="commissionRate"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>
+                          Commission Value{" "}
+                          {form.watch("commissionType") === "PERCENTAGE"
+                            ? "(%)"
+                            : "(KES)"}
+                        </FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            step="0.01"
+                            placeholder="e.g. 5"
+                            disabled={isLoading}
+                            className="h-11"
+                            {...field}
+                            value={field.value ?? ""}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
               )}
             </div>
 
@@ -678,6 +841,70 @@ export function EditSaleDialog({
                 </FormItem>
               )}
             />
+
+            {/* Value change history */}
+            <div className="space-y-2">
+              <button
+                type="button"
+                onClick={() => setShowHistory((v) => !v)}
+                className="flex items-center gap-2 text-sm font-semibold text-muted-foreground hover:text-foreground"
+              >
+                <History className="h-4 w-4" />
+                Value change history
+                {amountHistory.length > 0 && (
+                  <Badge variant="outline" className="text-xs font-normal">
+                    {amountHistory.length}
+                  </Badge>
+                )}
+              </button>
+              {showHistory && (
+                amountHistory.length > 0 ? (
+                  <div className="border rounded-lg overflow-hidden">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Date</TableHead>
+                          <TableHead className="text-right">From</TableHead>
+                          <TableHead className="text-right">To</TableHead>
+                          <TableHead>Changed by</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {amountHistory.map((h) => (
+                          <TableRow key={h.id}>
+                            <TableCell className="text-sm">
+                              {moment(h.createdAt).format("MMM DD, YYYY")}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              KES{" "}
+                              {Number(h.oldAmount).toLocaleString("en-KE", {
+                                minimumFractionDigits: 2,
+                              })}
+                            </TableCell>
+                            <TableCell className="text-right font-medium">
+                              KES{" "}
+                              {Number(h.newAmount).toLocaleString("en-KE", {
+                                minimumFractionDigits: 2,
+                              })}
+                            </TableCell>
+                            <TableCell className="text-sm text-muted-foreground">
+                              {h.changedBy
+                                ? `${h.changedBy.firstName} ${h.changedBy.lastName}`
+                                : "—"}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground py-2">
+                    No value changes recorded yet — the total hasn&apos;t been
+                    adjusted since it was submitted.
+                  </p>
+                )
+              )}
+            </div>
 
             <DialogFooter className="flex-col sm:flex-row gap-2">
               <Button

@@ -32,9 +32,13 @@ export default function JobCardsPage() {
     }
   }, [isDirector]);
 
-  useEffect(() => {
-    dispatch(fetchJobCards({ page: currentPage, limit: 10 }));
+  const refetchJobCards = useCallback(() => {
+    return dispatch(fetchJobCards({ page: currentPage, limit: 10 }));
   }, [dispatch, currentPage]);
+
+  useEffect(() => {
+    refetchJobCards();
+  }, [refetchJobCards]);
 
   useEffect(() => {
     return () => {
@@ -91,7 +95,10 @@ export default function JobCardsPage() {
         )}
 
         {!isDirector && (
-          <MyExpenseUnpaidSummaryCard refreshKey={myExpenseSummaryRefreshKey} />
+          <MyExpenseUnpaidSummaryCard
+            refreshKey={myExpenseSummaryRefreshKey}
+            onRefresh={refetchJobCards}
+          />
         )}
 
         {/* Search Bar */}
@@ -138,7 +145,7 @@ export default function JobCardsPage() {
           onOpenChange={setIsCreateDialogOpen}
           onSuccess={() => {
             setIsCreateDialogOpen(false);
-            dispatch(fetchJobCards({ page: currentPage, limit: 10 }));
+            refetchJobCards();
             bumpMyExpenseSummary();
           }}
         />

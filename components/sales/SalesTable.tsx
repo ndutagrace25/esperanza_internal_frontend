@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAppDispatch } from "@/lib/hooks";
 import { deleteSale } from "@/lib/slices/saleSlice";
 import {
@@ -40,8 +40,10 @@ import {
   Plus,
   Loader2,
   Banknote,
+  History,
+  Percent,
 } from "lucide-react";
-import type { Sale } from "@/lib/types";
+import type { Sale, SaleCommissionPayment, SaleAmountHistoryEntry } from "@/lib/types";
 import { saleService } from "@/lib/services/saleService";
 import moment from "moment";
 
@@ -72,12 +74,85 @@ function ViewSaleContent({
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const [commissionPayments, setCommissionPayments] = useState<
+    SaleCommissionPayment[]
+  >([]);
+  const [addingCommissionPayment, setAddingCommissionPayment] =
+    useState(false);
+  const [commissionAmount, setCommissionAmount] = useState("");
+  const [commissionNotes, setCommissionNotes] = useState("");
+  const [commissionSubmitting, setCommissionSubmitting] = useState(false);
+  const [commissionError, setCommissionError] = useState<string | null>(null);
+
+  const [amountHistory, setAmountHistory] = useState<SaleAmountHistoryEntry[]>(
+    []
+  );
+  const [showHistory, setShowHistory] = useState(false);
+
   const installments = sale.installments ?? [];
   const paidAmount = Number(sale.paidAmount ?? 0);
   const totalAmount = Number(sale.totalAmount);
   const remaining = Math.max(0, totalAmount - paidAmount);
   const canAddPayment =
     sale.status !== "CANCELLED" && sale.status !== "COMPLETED" && remaining > 0;
+
+  const commissionTotal = Number(sale.commissionAmount ?? 0);
+  const commissionPaid = Number(sale.commissionPaidAmount ?? 0);
+  const commissionRemaining = Math.max(0, commissionTotal - commissionPaid);
+  const canPayCommission =
+    sale.status !== "CANCELLED" && commissionTotal > 0 && commissionRemaining > 0;
+
+  useEffect(() => {
+    if (sale.commissionSalesPersonId) {
+      saleService
+        .getCommissionPayments(sale.id)
+        .then(setCommissionPayments)
+        .catch(() => setCommissionPayments([]));
+    } else {
+      setCommissionPayments([]);
+    }
+    saleService
+      .getAmountHistory(sale.id)
+      .then(setAmountHistory)
+      .catch(() => setAmountHistory([]));
+  }, [sale.id, sale.commissionSalesPersonId]);
+
+  const handleAddCommissionPayment = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const amount = Number(commissionAmount);
+    if (!amount || amount <= 0) {
+      setCommissionError("Enter a valid amount");
+      return;
+    }
+    if (amount > commissionRemaining) {
+      setCommissionError(
+        `Amount cannot exceed remaining KES ${commissionRemaining.toLocaleString("en-KE", { minimumFractionDigits: 2 })}`
+      );
+      return;
+    }
+    setCommissionError(null);
+    setCommissionSubmitting(true);
+    try {
+      const updated = await saleService.recordCommissionPayment(sale.id, {
+        amount,
+        notes: commissionNotes.trim() || undefined,
+      });
+      onSaleUpdated(updated);
+      const payments = await saleService.getCommissionPayments(sale.id);
+      setCommissionPayments(payments);
+      setCommissionAmount("");
+      setCommissionNotes("");
+      setAddingCommissionPayment(false);
+    } catch (err) {
+      setCommissionError(
+        err && typeof err === "object" && "response" in err && err.response && typeof (err as { response: { data?: { error?: string } } }).response.data === "object"
+          ? (err as { response: { data: { error?: string } } }).response.data?.error ?? "Failed to record commission payment"
+          : "Failed to record commission payment"
+      );
+    } finally {
+      setCommissionSubmitting(false);
+    }
+  };
 
   const handleAddPayment = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -360,6 +435,202 @@ function ViewSaleContent({
           <p className="text-sm text-muted-foreground py-2">
             No payments recorded yet.
           </p>
+        )}
+      </div>
+
+      {/* Commission */}
+      {sale.commissionSalesPerson && (
+        <div className="rounded-lg border p-4 bg-muted/30 space-y-3">
+          <h3 className="text-sm font-semibold flex items-center gap-2">
+            <Percent className="h-4 w-4" />
+            Commission — {sale.commissionSalesPerson.name}
+          </h3>
+          <div className="flex flex-wrap items-baseline gap-2">
+            <span className="font-medium">
+              {formatCurrency(sale.commissionPaidAmount ?? "0")} paid
+            </span>
+            <span className="text-muted-foreground">of</span>
+            <span className="font-medium">
+              {formatCurrency(sale.commissionAmount)}
+            </span>
+            <span className="text-sm text-muted-foreground">
+              (
+              {sale.commissionType === "PERCENTAGE"
+                ? `${sale.commissionRate}%`
+                : formatCurrency(sale.commissionRate ?? "0")}
+              )
+            </span>
+          </div>
+          {commissionTotal > 0 && (
+            <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
+              <div
+                className="h-full bg-primary rounded-full transition-all"
+                style={{
+                  width: `${Math.min(100, (commissionPaid / commissionTotal) * 100)}%`,
+                }}
+              />
+            </div>
+          )}
+          {commissionRemaining > 0 && (
+            <p className="text-sm text-muted-foreground">
+              Remaining: {formatCurrency(commissionRemaining.toFixed(2))}
+            </p>
+          )}
+          {commissionError && (
+            <p className="text-sm text-destructive">{commissionError}</p>
+          )}
+          {canPayCommission && !addingCommissionPayment && (
+            <Button
+              type="button"
+              size="sm"
+              onClick={() => setAddingCommissionPayment(true)}
+              className="mt-1"
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              Record commission payment
+            </Button>
+          )}
+          {canPayCommission && addingCommissionPayment && (
+            <form
+              onSubmit={handleAddCommissionPayment}
+              className="rounded-md border border-primary/30 bg-primary/5 p-4 space-y-3"
+            >
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <Label htmlFor="commission-amount">Amount (KES) *</Label>
+                  <Input
+                    id="commission-amount"
+                    type="number"
+                    min="0.01"
+                    step="0.01"
+                    placeholder={commissionRemaining.toFixed(2)}
+                    value={commissionAmount}
+                    onChange={(e) => setCommissionAmount(e.target.value)}
+                    disabled={commissionSubmitting}
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="commission-notes">Notes</Label>
+                  <Input
+                    id="commission-notes"
+                    placeholder="Optional"
+                    value={commissionNotes}
+                    onChange={(e) => setCommissionNotes(e.target.value)}
+                    disabled={commissionSubmitting}
+                    className="mt-1"
+                  />
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <Button type="submit" size="sm" disabled={commissionSubmitting}>
+                  {commissionSubmitting ? (
+                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  ) : null}
+                  Record payment
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    setAddingCommissionPayment(false);
+                    setCommissionError(null);
+                    setCommissionAmount("");
+                  }}
+                  disabled={commissionSubmitting}
+                >
+                  Cancel
+                </Button>
+              </div>
+            </form>
+          )}
+          {commissionPayments.length > 0 && (
+            <div className="border rounded-lg overflow-hidden bg-background">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Date</TableHead>
+                    <TableHead className="text-right">Amount</TableHead>
+                    <TableHead>Notes</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {commissionPayments.map((cp) => (
+                    <TableRow key={cp.id}>
+                      <TableCell className="text-sm">
+                        {formatDate(cp.paymentDate)}
+                      </TableCell>
+                      <TableCell className="text-right font-medium">
+                        {formatCurrency(cp.amount)}
+                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground">
+                        {cp.notes ?? "—"}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Value change history */}
+      <div className="space-y-2">
+        <button
+          type="button"
+          onClick={() => setShowHistory((v) => !v)}
+          className="flex items-center gap-2 text-sm font-semibold text-muted-foreground hover:text-foreground"
+        >
+          <History className="h-4 w-4" />
+          Value change history
+          {amountHistory.length > 0 && (
+            <Badge variant="outline" className="text-xs font-normal">
+              {amountHistory.length}
+            </Badge>
+          )}
+        </button>
+        {showHistory && (
+          amountHistory.length > 0 ? (
+            <div className="border rounded-lg overflow-hidden">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Date</TableHead>
+                    <TableHead className="text-right">From</TableHead>
+                    <TableHead className="text-right">To</TableHead>
+                    <TableHead>Changed by</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {amountHistory.map((h) => (
+                    <TableRow key={h.id}>
+                      <TableCell className="text-sm">
+                        {formatDate(h.createdAt)}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        {formatCurrency(h.oldAmount)}
+                      </TableCell>
+                      <TableCell className="text-right font-medium">
+                        {formatCurrency(h.newAmount)}
+                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground">
+                        {h.changedBy
+                          ? `${h.changedBy.firstName} ${h.changedBy.lastName}`
+                          : "—"}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground py-2">
+              No value changes recorded — the total has never been adjusted
+              after submission.
+            </p>
+          )
         )}
       </div>
     </div>

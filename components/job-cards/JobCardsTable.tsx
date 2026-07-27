@@ -133,6 +133,8 @@ export function JobCardsTable({
         return "bg-transparent text-emerald-600 border-emerald-300 dark:text-emerald-400 dark:border-emerald-700";
       case "IN_PROGRESS":
         return "bg-transparent text-blue-600 border-blue-300 dark:text-blue-400 dark:border-blue-700";
+      case "APPROVED":
+        return "bg-transparent text-indigo-600 border-indigo-300 dark:text-indigo-400 dark:border-indigo-700";
       case "PENDING_CLIENT_CONFIRMATION":
         return "bg-transparent text-amber-600 border-amber-300 dark:text-amber-400 dark:border-amber-700";
       case "DRAFT":
@@ -150,6 +152,8 @@ export function JobCardsTable({
         return "Draft";
       case "IN_PROGRESS":
         return "In Progress";
+      case "APPROVED":
+        return "Approved";
       case "PENDING_CLIENT_CONFIRMATION":
         return "Pending";
       case "COMPLETED":
@@ -158,6 +162,62 @@ export function JobCardsTable({
         return "Cancelled";
       default:
         return status;
+    }
+  };
+
+  // Payment status is derived from the job card's linked formal expense
+  // claims and is independent of the job progress status above.
+  const getPaymentStatusBadgeStyles = (status: JobCard["expensePaymentStatus"]) => {
+    switch (status) {
+      case "PAID":
+        return "bg-transparent text-emerald-600 border-emerald-300 dark:text-emerald-400 dark:border-emerald-700";
+      case "PARTIALLY_PAID":
+        return "bg-transparent text-teal-600 border-teal-300 dark:text-teal-400 dark:border-teal-700";
+      case "UNPAID":
+        return "bg-transparent text-amber-600 border-amber-300 dark:text-amber-400 dark:border-amber-700";
+      default:
+        return "";
+    }
+  };
+
+  const getPaymentStatusLabel = (status: JobCard["expensePaymentStatus"]) => {
+    switch (status) {
+      case "PAID":
+        return "Paid";
+      case "PARTIALLY_PAID":
+        return "Partially Paid";
+      case "UNPAID":
+        return "Unpaid";
+      default:
+        return null;
+    }
+  };
+
+  // Approval status is derived the same way, from the job card's linked
+  // formal expense claims.
+  const getApprovalStatusBadgeStyles = (
+    status: JobCard["expenseApprovalStatus"]
+  ) => {
+    switch (status) {
+      case "APPROVED":
+        return "bg-transparent text-blue-600 border-blue-300 dark:text-blue-400 dark:border-blue-700";
+      case "PENDING":
+        return "bg-transparent text-amber-600 border-amber-300 dark:text-amber-400 dark:border-amber-700";
+      default:
+        return "";
+    }
+  };
+
+  const getApprovalStatusLabel = (
+    status: JobCard["expenseApprovalStatus"]
+  ) => {
+    switch (status) {
+      case "APPROVED":
+        return "Expenses Approved";
+      case "PENDING":
+        return "Expenses Pending Approval";
+      default:
+        return null;
     }
   };
 
@@ -210,6 +270,38 @@ export function JobCardsTable({
                           <DollarSign className="h-3 w-3" />
                           <span>{jobCard.expenses?.length || 0} Expenses</span>
                         </button>
+                      </div>
+                      {/* Mobile: Show the same status badges as the desktop Status column */}
+                      <div className="flex flex-wrap items-center gap-1 sm:hidden mt-1">
+                        <Badge
+                          className={`border ${getStatusBadgeStyles(jobCard.status)}`}
+                        >
+                          {getStatusLabel(jobCard.status)}
+                        </Badge>
+                        {jobCard.status !== "COMPLETED" &&
+                          jobCard.expensePaymentStatus !== "PARTIALLY_PAID" &&
+                          jobCard.expensePaymentStatus !== "PAID" &&
+                          getApprovalStatusLabel(jobCard.expenseApprovalStatus) && (
+                            <Badge
+                              variant="outline"
+                              className={`text-xs border ${getApprovalStatusBadgeStyles(
+                                jobCard.expenseApprovalStatus
+                              )}`}
+                            >
+                              {getApprovalStatusLabel(jobCard.expenseApprovalStatus)}
+                            </Badge>
+                          )}
+                        {jobCard.status !== "COMPLETED" &&
+                          getPaymentStatusLabel(jobCard.expensePaymentStatus) && (
+                          <Badge
+                            variant="outline"
+                            className={`text-xs border ${getPaymentStatusBadgeStyles(
+                              jobCard.expensePaymentStatus
+                            )}`}
+                          >
+                            {getPaymentStatusLabel(jobCard.expensePaymentStatus)}
+                          </Badge>
+                        )}
                       </div>
                     </div>
                   </TableCell>
@@ -290,11 +382,37 @@ export function JobCardsTable({
                     </div>
                   </TableCell>
                   <TableCell className="hidden sm:table-cell">
-                    <Badge
-                      className={`border ${getStatusBadgeStyles(jobCard.status)}`}
-                    >
-                      {getStatusLabel(jobCard.status)}
-                    </Badge>
+                    <div className="flex flex-col items-start gap-1">
+                      <Badge
+                        className={`border ${getStatusBadgeStyles(jobCard.status)}`}
+                      >
+                        {getStatusLabel(jobCard.status)}
+                      </Badge>
+                      {jobCard.status !== "COMPLETED" &&
+                        jobCard.expensePaymentStatus !== "PARTIALLY_PAID" &&
+                        jobCard.expensePaymentStatus !== "PAID" &&
+                        getApprovalStatusLabel(jobCard.expenseApprovalStatus) && (
+                          <Badge
+                            variant="outline"
+                            className={`text-xs border ${getApprovalStatusBadgeStyles(
+                              jobCard.expenseApprovalStatus
+                            )}`}
+                          >
+                            {getApprovalStatusLabel(jobCard.expenseApprovalStatus)}
+                          </Badge>
+                        )}
+                      {jobCard.status !== "COMPLETED" &&
+                        getPaymentStatusLabel(jobCard.expensePaymentStatus) && (
+                        <Badge
+                          variant="outline"
+                          className={`text-xs border ${getPaymentStatusBadgeStyles(
+                            jobCard.expensePaymentStatus
+                          )}`}
+                        >
+                          {getPaymentStatusLabel(jobCard.expensePaymentStatus)}
+                        </Badge>
+                      )}
+                    </div>
                   </TableCell>
                   <TableCell className="text-right">
                     <DropdownMenu>

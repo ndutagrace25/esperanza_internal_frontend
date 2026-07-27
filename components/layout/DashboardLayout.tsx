@@ -14,9 +14,11 @@ import {
   LogOut,
   Menu,
   Package,
+  Percent,
   Plug,
   KeyRound,
   ShoppingCart,
+  UserCog,
   Users,
 } from "lucide-react";
 import Image from "next/image";
@@ -33,6 +35,8 @@ const allMenuItems = [
   { name: "Products", icon: Package, href: "/products" },
   { name: "Job Cards", icon: FileText, href: "/job-cards" },
   { name: "Sales", icon: ShoppingCart, href: "/sales" },
+  { name: "Sales People", icon: UserCog, href: "/sales-people" },
+  { name: "Commissions", icon: Percent, href: "/commissions" },
   { name: "Expenses", icon: DollarSign, href: "/expenses" },
   { name: "Business Analytics", icon: BarChart3, href: "/analytics" },
 ];

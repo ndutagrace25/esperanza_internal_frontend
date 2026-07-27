@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import { useAppDispatch } from "@/lib/hooks";
+import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import { updateJobCard } from "@/lib/slices/jobCardSlice";
 import {
   Dialog,
@@ -65,6 +65,9 @@ export function EditJobCardDialog({
   onSuccess,
 }: EditJobCardDialogProps) {
   const dispatch = useAppDispatch();
+  const { employee } = useAppSelector((state) => state.auth);
+  const isDirector = employee?.role?.name === "DIRECTOR";
+  const isLockedForStaff = !isDirector && jobCard.staffEditLocked;
   const {
     clients,
     isLoading: clientsLoading,
@@ -81,6 +84,7 @@ export function EditJobCardDialog({
     error: categoriesError,
   } = useExpenseCategories();
   const [isLoading, setIsLoading] = useState(false);
+  const fieldsDisabled = isLoading || isLockedForStaff;
 
   // Tasks and expenses state
   // Track existing tasks/expenses (with id) and new ones (with tempId)
@@ -144,6 +148,7 @@ export function EditJobCardDialog({
   }, [jobCard, form]);
 
   const onSubmit = async (data: UpdateJobCardData) => {
+    if (isLockedForStaff) return;
     setIsLoading(true);
     try {
       // Clean up empty strings to null and format dates
@@ -352,6 +357,14 @@ export function EditJobCardDialog({
             Update the job card details below.
           </DialogDescription>
         </DialogHeader>
+        {isLockedForStaff && (
+          <Alert className="bg-amber-50 border-amber-200">
+            <AlertDescription className="text-amber-800">
+              This job card has an approved expense and can no longer be
+              edited by staff. Contact a director if changes are needed.
+            </AlertDescription>
+          </Alert>
+        )}
         {(clientsError || employeesError || categoriesError) && (
           <Alert variant="destructive" className="mx-6">
             <AlertDescription className="font-medium text-red-500">
@@ -380,7 +393,7 @@ export function EditJobCardDialog({
                       value={clientOptions.find((opt) => opt.value === field.value) || null}
                       onChange={(option) => field.onChange(option?.value || null)}
                       placeholder="Select client"
-                      isDisabled={isLoading || clientsLoading}
+                      isDisabled={fieldsDisabled || clientsLoading}
                       isLoading={clientsLoading}
                       isClearable={false}
                       isSearchable
@@ -407,7 +420,7 @@ export function EditJobCardDialog({
                     <FormControl>
                       <Input
                         type="date"
-                        disabled={isLoading}
+                        disabled={fieldsDisabled}
                         className="h-11"
                         {...field}
                       />
@@ -428,6 +441,22 @@ export function EditJobCardDialog({
                     { value: "COMPLETED", label: "Completed" },
                     { value: "CANCELLED", label: "Cancelled" },
                   ];
+
+                  if (jobCard.status === "APPROVED") {
+                    return (
+                      <FormItem>
+                        <FormLabel>Status</FormLabel>
+                        <div className="flex h-11 items-center rounded-md border border-input bg-muted/40 px-3 text-sm text-muted-foreground">
+                          Approved
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          Set automatically once a linked expense is approved.
+                        </p>
+                        <FormMessage />
+                      </FormItem>
+                    );
+                  }
+
                   return (
                     <FormItem>
                       <FormLabel>Status</FormLabel>
@@ -437,7 +466,7 @@ export function EditJobCardDialog({
                         value={statusOptions.find((opt) => opt.value === field.value) || null}
                         onChange={(option) => field.onChange(option?.value || null)}
                         placeholder="Select status"
-                        isDisabled={isLoading}
+                        isDisabled={isLoading || !isDirector}
                         isClearable={false}
                         isSearchable
                         styles={{
@@ -445,6 +474,11 @@ export function EditJobCardDialog({
                           menu: (base) => ({ ...base, zIndex: 9999 }),
                         }}
                       />
+                      {!isDirector && (
+                        <p className="text-xs text-muted-foreground">
+                          Only directors can change job card status.
+                        </p>
+                      )}
                       <FormMessage />
                     </FormItem>
                   );
@@ -462,7 +496,7 @@ export function EditJobCardDialog({
                   <FormControl>
                     <Input
                       placeholder="e.g., POS Training + Printer Setup"
-                      disabled={isLoading}
+                      disabled={fieldsDisabled}
                       className="h-11"
                       {...field}
                       value={field.value ?? ""}
@@ -484,7 +518,7 @@ export function EditJobCardDialog({
                     <FormControl>
                       <Input
                         placeholder="Override client default location"
-                        disabled={isLoading}
+                        disabled={fieldsDisabled}
                         className="h-11"
                         {...field}
                         value={field.value ?? ""}
@@ -505,7 +539,7 @@ export function EditJobCardDialog({
                     <FormControl>
                       <Input
                         placeholder="Contact person name"
-                        disabled={isLoading}
+                        disabled={fieldsDisabled}
                         className="h-11"
                         {...field}
                         value={field.value ?? ""}
@@ -536,7 +570,7 @@ export function EditJobCardDialog({
                       value={employeeOptions.find((opt) => opt.value === field.value) || null}
                       onChange={(option) => field.onChange(option?.value || null)}
                       placeholder="Select staff"
-                      isDisabled={isLoading || employeesLoading}
+                      isDisabled={fieldsDisabled || employeesLoading}
                       isLoading={employeesLoading}
                       isClearable={false}
                       isSearchable
@@ -568,7 +602,7 @@ export function EditJobCardDialog({
                   variant="outline"
                   size="sm"
                   onClick={addTask}
-                  disabled={isLoading}
+                  disabled={fieldsDisabled}
                   className="flex items-center gap-2"
                 >
                   <Plus className="h-4 w-4" />
@@ -603,7 +637,7 @@ export function EditJobCardDialog({
                             variant="ghost"
                             size="sm"
                             onClick={() => removeTask(taskId)}
-                            disabled={isLoading}
+                            disabled={fieldsDisabled}
                             className="h-8 w-8 p-0 text-destructive hover:text-destructive"
                           >
                             <Trash2 className="h-4 w-4" />
@@ -624,7 +658,7 @@ export function EditJobCardDialog({
                                   e.target.value || null
                                 )
                               }
-                              disabled={isLoading}
+                              disabled={fieldsDisabled}
                               className="h-9"
                             />
                           </div>
@@ -642,7 +676,7 @@ export function EditJobCardDialog({
                                   e.target.value || null
                                 )
                               }
-                              disabled={isLoading}
+                              disabled={fieldsDisabled}
                               className="h-9"
                             />
                           </div>
@@ -670,7 +704,7 @@ export function EditJobCardDialog({
                   variant="outline"
                   size="sm"
                   onClick={addExpense}
-                  disabled={isLoading}
+                  disabled={fieldsDisabled}
                   className="flex items-center gap-2"
                 >
                   <Plus className="h-4 w-4" />
@@ -706,7 +740,7 @@ export function EditJobCardDialog({
                             variant="ghost"
                             size="sm"
                             onClick={() => removeExpense(expenseId)}
-                            disabled={isLoading}
+                            disabled={fieldsDisabled}
                             className="h-8 w-8 p-0 text-destructive hover:text-destructive"
                           >
                             <Trash2 className="h-4 w-4" />
@@ -736,7 +770,7 @@ export function EditJobCardDialog({
                                 updateExpenseField(expenseId, "category", option?.value || "")
                               }
                               placeholder="Select category"
-                              isDisabled={isLoading || categoriesLoading}
+                              isDisabled={fieldsDisabled || categoriesLoading}
                               isLoading={categoriesLoading}
                               isClearable={false}
                               isSearchable
@@ -762,7 +796,7 @@ export function EditJobCardDialog({
                                   e.target.value
                                 )
                               }
-                              disabled={isLoading}
+                              disabled={fieldsDisabled}
                               className="h-9"
                             />
                           </div>
@@ -778,7 +812,7 @@ export function EditJobCardDialog({
                                 checked === true
                               )
                             }
-                            disabled={isLoading}
+                            disabled={fieldsDisabled}
                           />
                           <label
                             htmlFor={`receipt-${expenseId}`}
@@ -804,7 +838,7 @@ export function EditJobCardDialog({
                   <FormControl>
                     <Textarea
                       placeholder="Overall work done summary..."
-                      disabled={isLoading}
+                      disabled={fieldsDisabled}
                       rows={3}
                       {...field}
                       value={field.value ?? ""}
@@ -826,7 +860,7 @@ export function EditJobCardDialog({
               </Button>
               <Button
                 type="submit"
-                disabled={isLoading}
+                disabled={fieldsDisabled}
                 className="w-full sm:w-auto"
               >
                 {isLoading ? (
