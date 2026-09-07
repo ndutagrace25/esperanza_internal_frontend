@@ -52,6 +52,7 @@ export function ClientSubscriptionsTable({
             <TableHeader>
               <TableRow>
                 <TableHead className="min-w-[200px]">Client</TableHead>
+                <TableHead className="min-w-[120px]">Code</TableHead>
                 <TableHead className="min-w-[140px]">Expiry date</TableHead>
               </TableRow>
             </TableHeader>
@@ -85,6 +86,9 @@ export function ClientSubscriptionsTable({
                           </span>
                         )}
                       </div>
+                    </TableCell>
+                    <TableCell>
+                      <span className="font-mono text-sm">{sub.code}</span>
                     </TableCell>
                     <TableCell>
                       <span
