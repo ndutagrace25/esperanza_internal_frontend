@@ -10,10 +10,14 @@ import type {
   MyUnpaidExpenseSummary,
 } from "../types";
 
+/** PAID = fully paid; UNPAID = not fully paid and not rejected/cancelled */
+export type ExpensePaymentFilter = "PAID" | "UNPAID";
+
 export type ExpensePaginationOptions = {
   page?: number;
   limit?: number;
   status?: ExpenseStatus;
+  paymentStatus?: ExpensePaymentFilter;
   categoryId?: string;
   submittedById?: string;
   startDate?: string;
@@ -46,6 +50,15 @@ export type RecordPaymentData = {
   notes?: string | null;
 };
 
+export type BulkPaymentData = Omit<RecordPaymentData, "amount"> & {
+  items: { expenseId: string; amount?: string | number }[];
+};
+
+export type BulkPaymentResult = {
+  succeeded: Expense[];
+  failed: { expenseId: string; expenseNumber: string; error: string }[];
+};
+
 // Get all expense categories
 export async function getAllExpenseCategories(): Promise<ExpenseCategory[]> {
   const response = await api.get<ExpenseCategory[]>("/expenses/categories");
@@ -74,6 +87,9 @@ export async function getAllExpenses(
   }
   if (options?.status) {
     params.append("status", options.status);
+  }
+  if (options?.paymentStatus) {
+    params.append("paymentStatus", options.paymentStatus);
   }
   if (options?.categoryId) {
     params.append("categoryId", options.categoryId);
@@ -192,6 +208,17 @@ export async function recordExpensePayment(
   return response.data;
 }
 
+// Record payments against several expenses at once
+export async function recordBulkExpensePayments(
+  data: BulkPaymentData
+): Promise<BulkPaymentResult> {
+  const response = await api.post<BulkPaymentResult>(
+    "/expenses/payments/bulk",
+    data
+  );
+  return response.data;
+}
+
 // Delete a recorded payment
 export async function deleteExpensePayment(
   expenseId: string,
@@ -239,6 +266,7 @@ export const expenseService = {
   markAsPaid: markExpenseAsPaid,
   getPayments: getExpensePayments,
   recordPayment: recordExpensePayment,
+  recordBulkPayments: recordBulkExpensePayments,
   deletePayment: deleteExpensePayment,
   reject: rejectExpense,
   cancel: cancelExpense,

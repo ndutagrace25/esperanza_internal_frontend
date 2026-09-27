@@ -34,8 +34,11 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import { EditExpenseDialog } from "./EditExpenseDialog";
 import { RecordPaymentDialog } from "./RecordPaymentDialog";
+import { BulkRecordPaymentDialog } from "./BulkRecordPaymentDialog";
+import type { BulkPaymentResult } from "@/lib/services/expenseService";
 import {
   MoreVertical,
   Edit,
@@ -98,6 +101,11 @@ export function ExpensesTable({
   } | null>(null);
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
   const [expenseToPay, setExpenseToPay] = useState<Expense | null>(null);
+  // Selected expenses for bulk payment, kept across pages and filters
+  const [selectedExpenses, setSelectedExpenses] = useState<
+    Record<string, Expense>
+  >({});
+  const [bulkPaymentDialogOpen, setBulkPaymentDialogOpen] = useState(false);
 
   const handleEditClick = (expense: Expense) => {
     setExpenseToEdit(expense);
@@ -126,6 +134,20 @@ export function ExpensesTable({
   const handlePaymentSuccess = async () => {
     setPaymentDialogOpen(false);
     setExpenseToPay(null);
+    await Promise.resolve(refetchExpenses());
+    onExpensesChanged?.();
+  };
+
+  const handleBulkPaymentSuccess = async (result: BulkPaymentResult) => {
+    setSelectedExpenses((prev) => {
+      const next = { ...prev };
+      for (const expense of result.succeeded) delete next[expense.id];
+      return next;
+    });
+    // Keep the dialog open to show failures, otherwise close it
+    if (result.failed.length === 0) {
+      setBulkPaymentDialogOpen(false);
+    }
     await Promise.resolve(refetchExpenses());
     onExpensesChanged?.();
   };
@@ -238,6 +260,62 @@ export function ExpensesTable({
     );
   };
 
+  // Draft/pending expenses can be selected too; the bulk payment approves them first
+  const canSelectForPayment = (expense: Expense) => {
+    return (
+      isDirector &&
+      expense.status !== "PAID" &&
+      expense.status !== "REJECTED" &&
+      expense.status !== "CANCELLED"
+    );
+  };
+
+  const selectableExpenses = expenses.filter(canSelectForPayment);
+  // Prefer the freshest copy from the current page and hide any selection
+  // that is no longer payable (e.g. paid elsewhere since it was selected)
+  const selectedList = Object.values(selectedExpenses)
+    .map((selected) => expenses.find((e) => e.id === selected.id) ?? selected)
+    .filter(canSelectForPayment);
+  const selectedTotal = selectedList.reduce(
+    (sum, e) => sum + Math.max(0, Number(e.amount) - Number(e.amountPaid)),
+    0
+  );
+  const allOnPageSelected =
+    selectableExpenses.length > 0 &&
+    selectableExpenses.every((e) => selectedExpenses[e.id]);
+  const someOnPageSelected = selectableExpenses.some(
+    (e) => selectedExpenses[e.id]
+  );
+
+  const toggleExpense = (expense: Expense, checked: boolean) => {
+    setSelectedExpenses((prev) => {
+      const next = { ...prev };
+      if (checked) next[expense.id] = expense;
+      else delete next[expense.id];
+      return next;
+    });
+  };
+
+  const togglePage = (checked: boolean) => {
+    setSelectedExpenses((prev) => {
+      const next = { ...prev };
+      for (const expense of selectableExpenses) {
+        if (checked) next[expense.id] = expense;
+        else delete next[expense.id];
+      }
+      return next;
+    });
+  };
+
+  const renderSelectCheckbox = (expense: Expense) =>
+    canSelectForPayment(expense) ? (
+      <Checkbox
+        checked={!!selectedExpenses[expense.id]}
+        onCheckedChange={(checked) => toggleExpense(expense, checked === true)}
+        aria-label={`Select ${expense.expenseNumber} for payment`}
+      />
+    ) : null;
+
   const canReject = (expense: Expense) => {
     return (
       isDirector &&
@@ -323,6 +401,40 @@ export function ExpensesTable({
 
   return (
     <>
+      {/* Bulk Payment Bar */}
+      {isDirector && selectedList.length > 0 && (
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 mb-3 border rounded-lg bg-muted/40">
+          <div className="text-sm">
+            <span className="font-medium">
+              {selectedList.length} expense
+              {selectedList.length === 1 ? "" : "s"} selected
+            </span>
+            <span className="text-muted-foreground">
+              {" "}
+              · {formatCurrency(selectedTotal)} outstanding
+            </span>
+          </div>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setSelectedExpenses({})}
+              className="flex-1 sm:flex-initial"
+            >
+              Clear
+            </Button>
+            <Button
+              size="sm"
+              onClick={() => setBulkPaymentDialogOpen(true)}
+              className="flex-1 sm:flex-initial"
+            >
+              <DollarSign className="mr-1 h-4 w-4" />
+              Record Payment
+            </Button>
+          </div>
+        </div>
+      )}
+
       {/* Mobile Card View */}
       <div className="md:hidden space-y-3">
         {expenses.map((expense) => (
@@ -330,6 +442,11 @@ export function ExpensesTable({
             <CardContent className="p-4">
               {/* Header: Expense Number + Status + Actions */}
               <div className="flex items-start justify-between mb-3">
+                {isDirector && renderSelectCheckbox(expense) && (
+                  <div className="pt-0.5 pr-3">
+                    {renderSelectCheckbox(expense)}
+                  </div>
+                )}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="font-semibold text-sm">
@@ -457,6 +574,22 @@ export function ExpensesTable({
           <Table>
             <TableHeader>
               <TableRow>
+                {isDirector && (
+                  <TableHead className="w-[40px]">
+                    <Checkbox
+                      checked={
+                        allOnPageSelected
+                          ? true
+                          : someOnPageSelected
+                            ? "indeterminate"
+                            : false
+                      }
+                      onCheckedChange={(checked) => togglePage(checked === true)}
+                      disabled={selectableExpenses.length === 0}
+                      aria-label="Select all payable expenses on this page"
+                    />
+                  </TableHead>
+                )}
                 <TableHead className="min-w-[120px]">Expense #</TableHead>
                 <TableHead className="min-w-[150px]">Category</TableHead>
                 <TableHead className="min-w-[200px]">Description</TableHead>
@@ -472,6 +605,9 @@ export function ExpensesTable({
             <TableBody>
               {expenses.map((expense) => (
                 <TableRow key={expense.id}>
+                  {isDirector && (
+                    <TableCell>{renderSelectCheckbox(expense)}</TableCell>
+                  )}
                   <TableCell className="font-medium">
                     <div className="flex flex-col">
                       <span>{expense.expenseNumber}</span>
@@ -674,6 +810,16 @@ export function ExpensesTable({
           onOpenChange={setPaymentDialogOpen}
           expense={expenseToPay}
           onSuccess={handlePaymentSuccess}
+        />
+      )}
+
+      {/* Bulk Record Payment Dialog */}
+      {isDirector && (
+        <BulkRecordPaymentDialog
+          open={bulkPaymentDialogOpen}
+          onOpenChange={setBulkPaymentDialogOpen}
+          expenses={selectedList}
+          onSuccess={handleBulkPaymentSuccess}
         />
       )}
     </>

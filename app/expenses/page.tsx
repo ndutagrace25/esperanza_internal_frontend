@@ -20,6 +20,13 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useExpenseCategories } from "@/lib/hooks/useExpenseCategories";
 import { useEmployees } from "@/lib/hooks/useEmployees";
 import type { ExpenseStatus } from "@/lib/types";
+import type { ExpensePaymentFilter } from "@/lib/services/expenseService";
+
+const paymentFilterOptions: SelectOption[] = [
+  { value: "ALL", label: "All Payments" },
+  { value: "UNPAID", label: "Unpaid" },
+  { value: "PAID", label: "Paid" },
+];
 import ReactSelect from "react-select";
 
 // Debounce hook
@@ -51,6 +58,9 @@ export default function ExpensesPage() {
   const [statusFilter, setStatusFilter] = useState<ExpenseStatus | "ALL">(
     "ALL"
   );
+  const [paymentFilter, setPaymentFilter] = useState<
+    ExpensePaymentFilter | "ALL"
+  >("ALL");
   const [categoryFilter, setCategoryFilter] = useState<string>("ALL");
   const [submittedByFilter, setSubmittedByFilter] = useState<string>("ALL");
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
@@ -69,6 +79,7 @@ export default function ExpensesPage() {
       page: number;
       limit: number;
       status?: ExpenseStatus;
+      paymentStatus?: ExpensePaymentFilter;
       categoryId?: string;
       submittedById?: string;
       search?: string;
@@ -79,6 +90,9 @@ export default function ExpensesPage() {
 
     if (statusFilter !== "ALL") {
       options.status = statusFilter;
+    }
+    if (paymentFilter !== "ALL") {
+      options.paymentStatus = paymentFilter;
     }
     if (categoryFilter !== "ALL") {
       options.categoryId = categoryFilter;
@@ -95,6 +109,7 @@ export default function ExpensesPage() {
     dispatch,
     currentPage,
     statusFilter,
+    paymentFilter,
     categoryFilter,
     submittedByFilter,
     debouncedSearchTerm,
@@ -122,6 +137,11 @@ export default function ExpensesPage() {
 
   const handleStatusChange = (value: string) => {
     setStatusFilter(value as ExpenseStatus | "ALL");
+    setCurrentPage(1);
+  };
+
+  const handlePaymentChange = (value: string) => {
+    setPaymentFilter(value as ExpensePaymentFilter | "ALL");
     setCurrentPage(1);
   };
 
@@ -226,6 +246,29 @@ export default function ExpensesPage() {
                 placeholder="Status"
                 isClearable={false}
                 isSearchable
+                styles={{
+                  control: (base) => ({ ...base, minHeight: "40px" }),
+                  menu: (base) => ({ ...base, zIndex: 9999 }),
+                }}
+              />
+            </div>
+
+            {/* Payment Filter */}
+            <div className="flex-1 sm:flex-initial sm:w-[170px]">
+              <ReactSelectBase<SelectOption>
+                instanceId="expenses-payment-filter"
+                options={paymentFilterOptions}
+                value={
+                  paymentFilterOptions.find(
+                    (opt) => opt.value === paymentFilter
+                  ) || null
+                }
+                onChange={(option) =>
+                  handlePaymentChange(option?.value || "ALL")
+                }
+                placeholder="Payment"
+                isClearable={false}
+                isSearchable={false}
                 styles={{
                   control: (base) => ({ ...base, minHeight: "40px" }),
                   menu: (base) => ({ ...base, zIndex: 9999 }),
@@ -360,6 +403,7 @@ export default function ExpensesPage() {
             <p className="text-muted-foreground">
               {searchTerm ||
                 statusFilter !== "ALL" ||
+                paymentFilter !== "ALL" ||
                 categoryFilter !== "ALL" ||
                 submittedByFilter !== "ALL"
                 ? "No expenses found matching your filters."
