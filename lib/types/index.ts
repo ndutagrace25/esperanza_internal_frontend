@@ -158,6 +158,7 @@ export type ClientSubscription = {
   };
   code: string;
   apiBaseUrl: string;
+  mpesaBaseUrl: string | null;
   expiryDate: string;
   status: ClientSubscriptionStatus;
   createdAt: string;

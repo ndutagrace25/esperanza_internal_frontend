@@ -5,6 +5,7 @@ export type CreateClientSubscriptionData = {
   clientId: string;
   code: string;
   apiBaseUrl: string;
+  mpesaBaseUrl?: string | null;
   expiryDate: string;
   status?: ClientSubscription["status"];
 };

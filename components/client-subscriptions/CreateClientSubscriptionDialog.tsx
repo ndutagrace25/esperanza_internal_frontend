@@ -55,6 +55,7 @@ export function CreateClientSubscriptionDialog({
       clientId: "",
       code: "",
       apiBaseUrl: "",
+      mpesaBaseUrl: "",
       expiryDate: "",
       status: "active",
     },
@@ -81,6 +82,8 @@ export function CreateClientSubscriptionDialog({
           ...data,
           code: data.code.trim(),
           apiBaseUrl: data.apiBaseUrl.trim().replace(/\/$/, ""),
+          mpesaBaseUrl:
+            data.mpesaBaseUrl?.trim().replace(/\/$/, "") || null,
           expiryDate: new Date(data.expiryDate).toISOString(),
         })
       ).unwrap();
@@ -197,6 +200,29 @@ export function CreateClientSubscriptionDialog({
                   </FormControl>
                   <p className="text-xs text-muted-foreground">
                     Base URL only (e.g. https://backend.example.co.ke/api).
+                  </p>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="mpesaBaseUrl"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>M-Pesa base URL</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="https://mpesa.example.co.ke/api"
+                      disabled={isLoading}
+                      className="h-11"
+                      {...field}
+                      value={field.value ?? ""}
+                    />
+                  </FormControl>
+                  <p className="text-xs text-muted-foreground">
+                    Optional. Base URL only (e.g. https://mpesa.example.co.ke/api).
                   </p>
                   <FormMessage />
                 </FormItem>

@@ -59,6 +59,7 @@ export function EditClientSubscriptionDialog({
     defaultValues: {
       code: subscription.code,
       apiBaseUrl: subscription.apiBaseUrl,
+      mpesaBaseUrl: subscription.mpesaBaseUrl ?? "",
       expiryDate: toDateInputValue(subscription.expiryDate),
       status: subscription.status,
     },
@@ -68,6 +69,7 @@ export function EditClientSubscriptionDialog({
     form.reset({
       code: subscription.code,
       apiBaseUrl: subscription.apiBaseUrl,
+      mpesaBaseUrl: subscription.mpesaBaseUrl ?? "",
       expiryDate: toDateInputValue(subscription.expiryDate),
       status: subscription.status,
     });
@@ -91,6 +93,8 @@ export function EditClientSubscriptionDialog({
             ...data,
             code: data.code?.trim(),
             apiBaseUrl: data.apiBaseUrl?.trim().replace(/\/$/, ""),
+            mpesaBaseUrl:
+              data.mpesaBaseUrl?.trim().replace(/\/$/, "") || null,
             expiryDate: data.expiryDate
               ? new Date(data.expiryDate).toISOString()
               : undefined,
@@ -158,6 +162,29 @@ export function EditClientSubscriptionDialog({
                   <FormControl>
                     <Input disabled={isLoading} className="h-11" {...field} />
                   </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="mpesaBaseUrl"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>M-Pesa base URL</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="https://mpesa.example.co.ke/api"
+                      disabled={isLoading}
+                      className="h-11"
+                      {...field}
+                      value={field.value ?? ""}
+                    />
+                  </FormControl>
+                  <p className="text-xs text-muted-foreground">
+                    Optional. Base URL only (e.g. https://mpesa.example.co.ke/api).
+                  </p>
                   <FormMessage />
                 </FormItem>
               )}
