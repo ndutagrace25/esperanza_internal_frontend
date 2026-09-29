@@ -9,7 +9,16 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { CalendarClock, Edit, MoreVertical } from "lucide-react";
 import { RenewClientSubscriptionDialog } from "./RenewClientSubscriptionDialog";
+import { EditClientSubscriptionDialog } from "./EditClientSubscriptionDialog";
 import type { ClientSubscription } from "@/lib/types";
 import {
   expiryDateClassName,
@@ -28,6 +37,7 @@ export function ClientSubscriptionsTable({
   onRefresh,
 }: ClientSubscriptionsTableProps) {
   const [renewOpen, setRenewOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
   const [selected, setSelected] = useState<ClientSubscription | null>(null);
 
   const sortedSubscriptions = useMemo(
@@ -38,6 +48,11 @@ export function ClientSubscriptionsTable({
   const openRenew = (sub: ClientSubscription) => {
     setSelected(sub);
     setRenewOpen(true);
+  };
+
+  const openEdit = (sub: ClientSubscription) => {
+    setSelected(sub);
+    setEditOpen(true);
   };
 
   if (sortedSubscriptions.length === 0) {
@@ -53,7 +68,9 @@ export function ClientSubscriptionsTable({
               <TableRow>
                 <TableHead className="min-w-[200px]">Client</TableHead>
                 <TableHead className="min-w-[120px]">Code</TableHead>
+                <TableHead className="min-w-[200px]">M-Pesa base URL</TableHead>
                 <TableHead className="min-w-[140px]">Expiry date</TableHead>
+                <TableHead className="w-[70px]">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -91,6 +108,15 @@ export function ClientSubscriptionsTable({
                       <span className="font-mono text-sm">{sub.code}</span>
                     </TableCell>
                     <TableCell>
+                      {sub.mpesaBaseUrl ? (
+                        <span className="font-mono text-sm break-all">
+                          {sub.mpesaBaseUrl}
+                        </span>
+                      ) : (
+                        <span className="text-sm text-muted-foreground">—</span>
+                      )}
+                    </TableCell>
+                    <TableCell>
                       <span
                         className={expiryDateClassName(urgency)}
                         title={
@@ -104,6 +130,31 @@ export function ClientSubscriptionsTable({
                         {moment(sub.expiryDate).format("MMM D, YYYY")}
                       </span>
                     </TableCell>
+                    <TableCell onClick={(e) => e.stopPropagation()}>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 w-8 p-0"
+                          >
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="bg-white">
+                          {canRenew && (
+                            <DropdownMenuItem onClick={() => openRenew(sub)}>
+                              <CalendarClock className="mr-2 h-4 w-4" />
+                              Update expiry
+                            </DropdownMenuItem>
+                          )}
+                          <DropdownMenuItem onClick={() => openEdit(sub)}>
+                            <Edit className="mr-2 h-4 w-4" />
+                            Edit details
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
                   </TableRow>
                 );
               })}
@@ -112,7 +163,20 @@ export function ClientSubscriptionsTable({
         </div>
       </div>
 
-      {selected && (
+      {selected && editOpen && (
+        <EditClientSubscriptionDialog
+          open={editOpen}
+          onOpenChange={setEditOpen}
+          subscription={selected}
+          onSuccess={() => {
+            setEditOpen(false);
+            setSelected(null);
+            onRefresh();
+          }}
+        />
+      )}
+
+      {selected && renewOpen && (
         <RenewClientSubscriptionDialog
           open={renewOpen}
           onOpenChange={setRenewOpen}
