@@ -83,10 +83,42 @@ export async function renewClientSubscription(
   return response.data;
 }
 
+// ---- Ventura licensing (support actions) ----
+
+/** Licence code for a server without internet, bound to its installation id */
+export async function issueOfflineLicence(
+  id: string,
+  installationId: string
+): Promise<{ license: string }> {
+  const response = await api.post<{ license: string }>(
+    `/client-subscriptions/${id}/licence/offline`,
+    { installationId }
+  );
+  return response.data;
+}
+
+/** One-time key to move the licence to a new server */
+export async function createLicenceActivationKey(
+  id: string
+): Promise<{ activationKey: string }> {
+  const response = await api.post<{ activationKey: string }>(
+    `/client-subscriptions/${id}/licence/activation-key`
+  );
+  return response.data;
+}
+
+/** Unbind the installation: the next server that checks in takes the licence */
+export async function resetLicenceInstallation(id: string): Promise<void> {
+  await api.post(`/client-subscriptions/${id}/licence/reset-installation`);
+}
+
 export const clientSubscriptionService = {
   getAll: getAllClientSubscriptions,
   getById: getClientSubscriptionById,
   create: createClientSubscription,
   update: updateClientSubscription,
   renew: renewClientSubscription,
+  issueOfflineLicence,
+  createLicenceActivationKey,
+  resetLicenceInstallation,
 };

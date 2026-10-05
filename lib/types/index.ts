@@ -163,6 +163,19 @@ export type ClientSubscription = {
   status: ClientSubscriptionStatus;
   createdAt: string;
   updatedAt: string;
+  // Ventura licensing
+  installationId?: string | null;
+  activationKey?: string | null;
+  licenseIssuedAt?: string | null;
+  lastCheckInAt?: string | null;
+  lastCheckInIp?: string | null;
+  lastCheckInVersion?: string | null;
+  conflictInstallationId?: string | null;
+  conflictAt?: string | null;
+  expiryAdjustedFrom?: string | null;
+  expiryAdjustedAt?: string | null;
+  previousInstallationId?: string | null;
+  reboundAt?: string | null;
 };
 
 // Product Category types

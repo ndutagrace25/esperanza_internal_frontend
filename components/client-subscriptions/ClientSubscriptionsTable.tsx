@@ -16,9 +16,10 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { CalendarClock, Edit, MoreVertical } from "lucide-react";
+import { AlertTriangle, CalendarClock, Edit, KeyRound, MoreVertical, RotateCcw, ShieldCheck } from "lucide-react";
 import { RenewClientSubscriptionDialog } from "./RenewClientSubscriptionDialog";
 import { EditClientSubscriptionDialog } from "./EditClientSubscriptionDialog";
+import { LicenceDialog, type LicenceAction } from "./LicenceDialog";
 import type { ClientSubscription } from "@/lib/types";
 import {
   expiryDateClassName,
@@ -39,6 +40,12 @@ export function ClientSubscriptionsTable({
   const [renewOpen, setRenewOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [selected, setSelected] = useState<ClientSubscription | null>(null);
+  const [licenceAction, setLicenceAction] = useState<LicenceAction | null>(null);
+
+  const openLicence = (sub: ClientSubscription, action: LicenceAction) => {
+    setSelected(sub);
+    setLicenceAction(action);
+  };
 
   const sortedSubscriptions = useMemo(
     () => sortByExpiryDate(subscriptions),
@@ -70,6 +77,7 @@ export function ClientSubscriptionsTable({
                 <TableHead className="min-w-[120px]">Code</TableHead>
                 <TableHead className="min-w-[200px]">M-Pesa base URL</TableHead>
                 <TableHead className="min-w-[140px]">Expiry date</TableHead>
+                <TableHead className="min-w-[170px]">Licence</TableHead>
                 <TableHead className="w-[70px]">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -129,6 +137,48 @@ export function ClientSubscriptionsTable({
                       >
                         {moment(sub.expiryDate).format("MMM D, YYYY")}
                       </span>
+                      {sub.expiryAdjustedFrom && (
+                        <span
+                          className="block text-xs text-amber-700"
+                          title="At its first check-in the hotel was already on this later date, so it was kept. Update the expiry to confirm or correct it."
+                        >
+                          from hotel (was {moment(sub.expiryAdjustedFrom).format("MMM D, YYYY")})
+                        </span>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {sub.installationId ? (
+                        <div className="flex flex-col text-xs">
+                          <span
+                            className="font-mono"
+                            title={sub.installationId}
+                          >
+                            {sub.installationId.slice(0, 8)}…
+                          </span>
+                          <span className="text-muted-foreground">
+                            {sub.lastCheckInAt
+                              ? `checked in ${moment(sub.lastCheckInAt).fromNow()}`
+                              : "offline code"}
+                          </span>
+                          {sub.conflictInstallationId && (
+                            <span className="flex items-center gap-1 text-red-600">
+                              <AlertTriangle className="h-3 w-3" /> used elsewhere
+                            </span>
+                          )}
+                          {sub.reboundAt && (
+                            <span
+                              className="text-amber-700"
+                              title={`Moved automatically from ${sub.previousInstallationId ?? "?"}`}
+                            >
+                              moved {moment(sub.reboundAt).fromNow()}
+                            </span>
+                          )}
+                        </div>
+                      ) : (
+                        <span className="text-sm text-muted-foreground">
+                          Not activated
+                        </span>
+                      )}
                     </TableCell>
                     <TableCell onClick={(e) => e.stopPropagation()}>
                       <DropdownMenu>
@@ -152,6 +202,20 @@ export function ClientSubscriptionsTable({
                             <Edit className="mr-2 h-4 w-4" />
                             Edit details
                           </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => openLicence(sub, "offline")}>
+                            <ShieldCheck className="mr-2 h-4 w-4" />
+                            Offline licence code
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => openLicence(sub, "activation")}>
+                            <KeyRound className="mr-2 h-4 w-4" />
+                            Activation key (new server)
+                          </DropdownMenuItem>
+                          {sub.installationId && (
+                            <DropdownMenuItem onClick={() => openLicence(sub, "reset")}>
+                              <RotateCcw className="mr-2 h-4 w-4" />
+                              Reset installation
+                            </DropdownMenuItem>
+                          )}
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </TableCell>
@@ -173,6 +237,21 @@ export function ClientSubscriptionsTable({
             setSelected(null);
             onRefresh();
           }}
+        />
+      )}
+
+      {selected && licenceAction && (
+        <LicenceDialog
+          open={licenceAction !== null}
+          onOpenChange={(open) => {
+            if (!open) {
+              setLicenceAction(null);
+              setSelected(null);
+            }
+          }}
+          subscription={selected}
+          action={licenceAction}
+          onSuccess={onRefresh}
         />
       )}
 
