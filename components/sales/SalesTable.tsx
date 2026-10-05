@@ -768,6 +768,9 @@ export function SalesTable({
               <TableRow>
                 <TableHead className="min-w-[120px]">Sale Number</TableHead>
                 <TableHead className="min-w-[200px]">Client</TableHead>
+                <TableHead className="min-w-[150px] hidden md:table-cell">
+                  Sales Person
+                </TableHead>
                 <TableHead className="min-w-[120px]">Date</TableHead>
                 <TableHead className="min-w-[100px]">Items</TableHead>
                 <TableHead className="min-w-[140px] text-right">
@@ -812,7 +815,20 @@ export function SalesTable({
                           {sale.client.contactPerson}
                         </span>
                       )}
+                      {/* Mobile: sales person under the client (column hidden) */}
+                      {sale.commissionSalesPerson && (
+                        <span className="text-xs text-muted-foreground md:hidden">
+                          Sales person: {sale.commissionSalesPerson.name}
+                        </span>
+                      )}
                     </div>
+                  </TableCell>
+                  <TableCell className="hidden md:table-cell">
+                    {sale.commissionSalesPerson ? (
+                      <span className="text-sm">{sale.commissionSalesPerson.name}</span>
+                    ) : (
+                      <span className="text-sm text-muted-foreground">—</span>
+                    )}
                   </TableCell>
                   <TableCell>
                     <span className="hidden md:inline">
