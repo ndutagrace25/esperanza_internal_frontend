@@ -150,9 +150,16 @@ export function CreateSalesPersonDialog({
               <FormField
                 control={form.control}
                 name="email"
+                // Required: the sales person signs in to the Esperanza Sales app with it
+                rules={{
+                  required: "Email is required (used to sign in to the Sales app)",
+                  validate: (value) =>
+                    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value ?? "").trim()) ||
+                    "Enter a valid email address",
+                }}
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Email</FormLabel>
+                    <FormLabel>Email *</FormLabel>
                     <FormControl>
                       <Input
                         type="email"
