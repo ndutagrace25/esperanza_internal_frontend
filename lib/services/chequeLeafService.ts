@@ -21,6 +21,12 @@ export type ChequeLeafListOptions = PaginationOptions & {
 export type ChequeLeafListResponse = PaginatedResponse<ChequeLeaf> & {
   /** Sum of issued (not cancelled) cheques matching the filters */
   issuedAmountTotal: string;
+  /** Whole-register totals, ignoring search and filters */
+  summary: {
+    issuedCount: number;
+    issuedAmount: string;
+    cancelledCount: number;
+  };
 };
 
 /** Cheque numbers are stored as 1, 2, 3... and shown as 000001, 000002... */

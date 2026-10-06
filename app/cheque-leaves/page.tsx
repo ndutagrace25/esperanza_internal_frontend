@@ -9,6 +9,7 @@ import {
 import { ChequeLeafDialog } from "@/components/cheque-leaves/ChequeLeafDialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useAppSelector } from "@/lib/hooks";
 import {
@@ -116,6 +117,50 @@ export default function ChequeLeavesPage() {
           </Alert>
         )}
 
+        {result && (
+          <div className="grid gap-4 sm:grid-cols-3">
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">
+                  Total Cheques Issued
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-2xl font-bold">
+                  {formatCurrency(result.summary.issuedAmount)}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Excludes cancelled leaves
+                </p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">
+                  Cheques Issued
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-2xl font-bold">
+                  {result.summary.issuedCount.toLocaleString("en-KE")}
+                </p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">
+                  Cancelled Leaves
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-2xl font-bold">
+                  {result.summary.cancelledCount.toLocaleString("en-KE")}
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
         <div className="flex flex-col sm:flex-row gap-3">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -143,16 +188,16 @@ export default function ChequeLeavesPage() {
           </div>
         </div>
 
-        {result && (
+        {result && (search || status) && (
           <div className="flex flex-wrap gap-x-6 gap-y-1 text-sm text-muted-foreground">
             <span>
               <span className="font-medium text-foreground">
                 {result.pagination.total}
               </span>{" "}
-              leaf/leaves
+              matching leaf/leaves
             </span>
             <span>
-              Issued total:{" "}
+              Issued total for this filter:{" "}
               <span className="font-medium text-foreground">
                 {formatCurrency(result.issuedAmountTotal)}
               </span>
