@@ -6,6 +6,7 @@ import {
   RecipientList,
   type RecipientOption,
 } from "@/components/bulk-sms/RecipientList";
+import { OtherRecipients } from "@/components/bulk-sms/OtherRecipients";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -23,6 +24,7 @@ import { useAppSelector } from "@/lib/hooks";
 import {
   smsService,
   type BroadcastResult,
+  type OtherRecipient,
   type SmsRecipients,
 } from "@/lib/services/smsService";
 import { showSuccessAlert } from "@/lib/swal";
@@ -79,6 +81,9 @@ export default function BulkSmsPage() {
   );
   const [selectedEmployeeIds, setSelectedEmployeeIds] = useState<Set<string>>(
     new Set()
+  );
+  const [otherRecipients, setOtherRecipients] = useState<OtherRecipient[]>(
+    []
   );
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [isSending, setIsSending] = useState(false);
@@ -138,7 +143,8 @@ export default function BulkSmsPage() {
     );
   }
 
-  const totalSelected = selectedClientIds.size + selectedEmployeeIds.size;
+  const totalSelected =
+    selectedClientIds.size + selectedEmployeeIds.size + otherRecipients.length;
   const trimmedMessage = message.trim();
   const preview = trimmedMessage
     .split(NAME_PLACEHOLDER)
@@ -154,6 +160,7 @@ export default function BulkSmsPage() {
         message: trimmedMessage,
         clientIds: [...selectedClientIds],
         employeeIds: [...selectedEmployeeIds],
+        otherRecipients,
       });
       setConfirmOpen(false);
       setLastResult(result);
@@ -161,6 +168,7 @@ export default function BulkSmsPage() {
         setMessage("");
         setSelectedClientIds(new Set());
         setSelectedEmployeeIds(new Set());
+        setOtherRecipients([]);
       }
       await showSuccessAlert({
         title: "Bulk SMS sent",
@@ -270,8 +278,9 @@ export default function BulkSmsPage() {
             )}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <p className="text-sm text-muted-foreground">
-                {selectedClientIds.size} client(s) and{" "}
-                {selectedEmployeeIds.size} employee(s) selected
+                {selectedClientIds.size} client(s), {selectedEmployeeIds.size}{" "}
+                employee(s) and {otherRecipients.length} other recipient(s)
+                selected
               </p>
               <Button
                 onClick={() => setConfirmOpen(true)}
@@ -306,6 +315,11 @@ export default function BulkSmsPage() {
           </div>
         )}
 
+        <OtherRecipients
+          recipients={otherRecipients}
+          onChange={setOtherRecipients}
+        />
+
         <Dialog
           open={confirmOpen}
           onOpenChange={(open) => !isSending && setConfirmOpen(open)}
@@ -315,7 +329,8 @@ export default function BulkSmsPage() {
               <DialogTitle>Send Bulk SMS</DialogTitle>
               <DialogDescription>
                 This will send the message below to {selectedClientIds.size}{" "}
-                client(s) and {selectedEmployeeIds.size} employee(s) via
+                client(s), {selectedEmployeeIds.size} employee(s) and{" "}
+                {otherRecipients.length} other recipient(s) via
                 Advanta. SMS cannot be recalled once sent.
               </DialogDescription>
             </DialogHeader>

@@ -25,8 +25,13 @@ export type SmsRecipients = {
   employees: SmsRecipientEmployee[];
 };
 
+export type OtherRecipient = {
+  name: string;
+  phone: string;
+};
+
 export type BroadcastFailure = {
-  type: "CLIENT" | "EMPLOYEE";
+  type: "CLIENT" | "EMPLOYEE" | "OTHER";
   id: string;
   name: string;
   mobile: string | null;
@@ -44,6 +49,7 @@ export type BroadcastData = {
   message: string;
   clientIds: string[];
   employeeIds: string[];
+  otherRecipients: OtherRecipient[];
 };
 
 // Get all clients and active employees that can receive bulk SMS (directors only)
