@@ -567,6 +567,29 @@ export type MyUnpaidExpenseSummary = {
 };
 
 // API Error types
+// Cheque leaf types
+export type ChequeLeafStatus = "ISSUED" | "CANCELLED";
+
+export type ChequeLeaf = {
+  id: string;
+  chequeNumber: number;
+  payee: string;
+  amount: string;
+  description: string | null;
+  chequeDate: string;
+  status: ChequeLeafStatus;
+  cancelledReason: string | null;
+  cancelledAt: string | null;
+  recordedById: string | null;
+  recordedBy?: {
+    id: string;
+    firstName: string;
+    lastName: string;
+  } | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
 export type ApiError = {
   error: string;
   requiresPasswordReset?: boolean;

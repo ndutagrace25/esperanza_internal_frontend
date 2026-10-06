@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import {
   BarChart3,
   Briefcase,
+  BookOpen,
   DollarSign,
   FileText,
   FolderTree,
@@ -39,6 +40,7 @@ const allMenuItems = [
   { name: "Sales People", icon: UserCog, href: "/sales-people" },
   { name: "Commissions", icon: Percent, href: "/commissions" },
   { name: "Expenses", icon: DollarSign, href: "/expenses" },
+  { name: "Cheque Leaves", icon: BookOpen, href: "/cheque-leaves" },
   { name: "Bulk SMS", icon: MessageSquare, href: "/bulk-sms" },
   { name: "Business Analytics", icon: BarChart3, href: "/analytics" },
 ];
