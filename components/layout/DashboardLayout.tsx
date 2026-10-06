@@ -17,6 +17,7 @@ import {
   Percent,
   Plug,
   KeyRound,
+  MessageSquare,
   ShoppingCart,
   UserCog,
   Users,
@@ -38,6 +39,7 @@ const allMenuItems = [
   { name: "Sales People", icon: UserCog, href: "/sales-people" },
   { name: "Commissions", icon: Percent, href: "/commissions" },
   { name: "Expenses", icon: DollarSign, href: "/expenses" },
+  { name: "Bulk SMS", icon: MessageSquare, href: "/bulk-sms" },
   { name: "Business Analytics", icon: BarChart3, href: "/analytics" },
 ];
 
