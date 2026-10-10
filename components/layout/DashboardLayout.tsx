@@ -20,6 +20,7 @@ import {
   KeyRound,
   MessageSquare,
   ShoppingCart,
+  ShieldCheck,
   UserCog,
   Users,
 } from "lucide-react";
@@ -43,6 +44,7 @@ const allMenuItems = [
   { name: "Cheque Leaves", icon: BookOpen, href: "/cheque-leaves" },
   { name: "Bulk SMS", icon: MessageSquare, href: "/bulk-sms" },
   { name: "Business Analytics", icon: BarChart3, href: "/analytics" },
+  { name: "Weekend Standby", icon: ShieldCheck, href: "/standby" },
 ];
 
 // Menu items visible to STAFF role
@@ -52,6 +54,7 @@ const staffMenuItems = [
   { name: "Product Categories", icon: FolderTree, href: "/product-categories" },
   { name: "Products", icon: Package, href: "/products" },
   { name: "Job Cards", icon: FileText, href: "/job-cards" },
+  { name: "Weekend Standby", icon: ShieldCheck, href: "/standby" },
 ];
 
 interface SidebarContentProps {
